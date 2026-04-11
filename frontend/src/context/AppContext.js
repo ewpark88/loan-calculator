@@ -1,0 +1,54 @@
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getExchangeRate as fetchRate } from '../services/api';
+
+const AppContext = createContext(null);
+
+const CACHE_KEY = '@loan_calc_exchange_rates';
+const CACHE_TTL = 60 * 60 * 1000; // 1시간
+
+export function AppProvider({ children }) {
+  const [exchangeRates, setExchangeRates] = useState(null);
+
+  const fetchExchangeRates = useCallback(async () => {
+    // 1. 로컬 캐시 확인
+    try {
+      const cached = await AsyncStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_TTL) {
+          setExchangeRates(data);
+          return data;
+        }
+      }
+    } catch (_) {
+      // 캐시 읽기 실패는 무시
+    }
+
+    // 2. 백엔드 API 호출
+    const data = await fetchRate();
+    setExchangeRates(data);
+
+    // 3. 로컬 캐시 저장
+    try {
+      await AsyncStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({ data, timestamp: Date.now() })
+      );
+    } catch (_) {}
+
+    return data;
+  }, []);
+
+  return (
+    <AppContext.Provider value={{ exchangeRates, fetchExchangeRates }}>
+      {children}
+    </AppContext.Provider>
+  );
+}
+
+export function useApp() {
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error('useApp must be used within AppProvider');
+  return ctx;
+}

@@ -1,0 +1,12 @@
+node_modules/
+*.env
+loan_calculator.db
+.expo/
+.expo-shared/
+dist/
+build/
+*.log
+npm-debug.log*
+.DS_Store
+.claude/
+create_repo.json

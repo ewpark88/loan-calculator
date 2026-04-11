@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "대출 계산기",
+    "slug": "loan-calculator",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#3F51B5"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.example.loancalculator"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#3F51B5"
+      },
+      "package": "com.example.loancalculator"
+    }
+  }
+}
