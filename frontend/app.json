@@ -9,16 +9,20 @@
       "resizeMode": "contain",
       "backgroundColor": "#3F51B5"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.example.loancalculator"
     },
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#3F51B5"
-      },
       "package": "com.example.loancalculator"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "74411a45-cfb3-4301-b7a7-1c297df84e33"
+      }
     }
   }
 }
