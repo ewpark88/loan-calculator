@@ -19,6 +19,15 @@
     "android": {
       "package": "com.example.loancalculator"
     },
+    "plugins": [
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "74411a45-cfb3-4301-b7a7-1c297df84e33"
