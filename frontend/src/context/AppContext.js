@@ -10,26 +10,32 @@ const CACHE_TTL = 60 * 60 * 1000; // 1시간
 export function AppProvider({ children }) {
   const [exchangeRates, setExchangeRates] = useState(null);
 
-  const fetchExchangeRates = useCallback(async () => {
-    // 1. 로컬 캐시 확인
-    try {
-      const cached = await AsyncStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < CACHE_TTL) {
-          setExchangeRates(data);
-          return data;
+  /**
+   * @param {boolean} force - true이면 캐시 무시하고 강제 새로고침
+   */
+  const fetchExchangeRates = useCallback(async (force = false) => {
+    // 강제 새로고침이 아니면 로컬 캐시 먼저 확인
+    if (!force) {
+      try {
+        const cached = await AsyncStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < CACHE_TTL) {
+            setExchangeRates(data);
+            return data;
+          }
         }
-      }
-    } catch (_) {
-      // 캐시 읽기 실패는 무시
+      } catch (_) {}
+    } else {
+      // 캐시 삭제
+      try { await AsyncStorage.removeItem(CACHE_KEY); } catch (_) {}
     }
 
-    // 2. 백엔드 API 호출
+    // 백엔드 API 호출
     const data = await fetchRate();
     setExchangeRates(data);
 
-    // 3. 로컬 캐시 저장
+    // 로컬 캐시 갱신
     try {
       await AsyncStorage.setItem(
         CACHE_KEY,
