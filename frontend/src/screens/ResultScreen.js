@@ -6,23 +6,38 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { saveLoanHistory } from '../services/api';
 import {
-  formatKRW, formatManWon, generateSchedule,
+  formatKRW, formatManWon, generateScheduleByType,
 } from '../utils/loanCalculator';
 import AdBanner from '../components/AdBanner';
 import AdInterstitial from '../components/AdInterstitial';
 
+// 방식별 표시 레이블
+const TYPE_LABEL = {
+  annuity:        '원리금균등분할',
+  equalPrincipal: '원금균등분할',
+  bullet:         '만기일시상환',
+  graduated:      '체증식분할상환',
+};
+
 export default function ResultScreen({ navigation, route }) {
   const { loanData, result, compareData, compareResult } = route.params;
-  const [saving, setSaving]   = useState(false);
-  const [saved, setSaved]     = useState(false);
-  const [showAd, setShowAd]   = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved]   = useState(false);
+  const [showAd, setShowAd] = useState(false);
 
   const isCompare = !!compareData;
+  const loanType  = loanData.loanType || 'annuity';
 
-  // 월별 상환 일정 (연도 구분자 포함)
+  // 월별 상환 일정
   const schedule = useMemo(() => {
     if (isCompare) return [];
-    return generateSchedule(loanData.principal, loanData.interestRate, loanData.period);
+    return generateScheduleByType(
+      loanData.principal,
+      loanData.interestRate,
+      loanData.period,
+      loanType,
+      loanData.gracePeriod || 0,
+    );
   }, [loanData, isCompare]);
 
   useEffect(() => {
@@ -49,28 +64,20 @@ export default function ResultScreen({ navigation, route }) {
     }
   }
 
-  /* ── FlatList 헤더 (스케줄 외 모든 콘텐츠) ── */
+  /* ── FlatList 헤더 ── */
   const ListHeader = (
     <View>
-      {/* 1. 월 상환금 요약 카드 */}
       <SummaryCard loanData={loanData} result={result} />
 
-      {/* 2. 비교 or 요약정보 */}
       {isCompare ? (
         <CompareView
-          loanData={loanData}     result={result}
+          loanData={loanData}       result={result}
           compareData={compareData} compareResult={compareResult}
         />
       ) : (
-        <SectionCard title="요약정보">
-          <DetailRow label="대출 원금" value={formatKRW(loanData.principal)} />
-          <DetailRow label="월 상환금" value={formatKRW(result.monthlyPayment)} highlight />
-          <DetailRow label="총 이자"   value={formatKRW(result.totalInterest)}  color="#E53935" />
-          <DetailRow label="총 납부액" value={formatKRW(result.totalAmount)} isLast />
-        </SectionCard>
+        <SummarySection loanData={loanData} result={result} />
       )}
 
-      {/* 3. 액션 버튼 */}
       <View style={styles.btnRow}>
         <TouchableOpacity
           style={[styles.saveBtn, saved && styles.savedBtn]}
@@ -89,12 +96,13 @@ export default function ResultScreen({ navigation, route }) {
 
       <AdBanner />
 
-      {/* 5. 월별 상환 일정 타이틀 (단일 모드만) */}
       {!isCompare && (
         <View style={styles.scheduleTitleRow}>
           <Text style={styles.scheduleTitleText}>📅 월별 상환 일정</Text>
           <View style={styles.scheduleBadge}>
-            <Text style={styles.scheduleBadgeText}>총 {loanData.period * 12}회차</Text>
+            <Text style={styles.scheduleBadgeText}>
+              총 {loanData.period * 12}회차
+            </Text>
           </View>
         </View>
       )}
@@ -102,11 +110,9 @@ export default function ResultScreen({ navigation, route }) {
   );
 
   function renderItem({ item }) {
-    if (item.type === 'yearHeader') {
-      return <YearSeparator year={item.year} />;
-    }
+    if (item.type === 'yearHeader') return <YearSeparator year={item.year} />;
     return (
-      <ScheduleCard item={item} initialPrincipal={loanData.principal} />
+      <ScheduleCard item={item} initialPrincipal={loanData.principal} loanType={loanType} />
     );
   }
 
@@ -129,22 +135,58 @@ export default function ResultScreen({ navigation, route }) {
   );
 }
 
-/* ══════════════════════════════════════ */
-/*  월 상환금 요약 카드                    */
-/* ══════════════════════════════════════ */
+/* ══════════════════════════════════════
+ *  월 상환금 요약 카드 (방식별 적응)
+ * ══════════════════════════════════════ */
 function SummaryCard({ loanData, result }) {
+  const loanType    = loanData.loanType || 'annuity';
+  const gracePeriod = loanData.gracePeriod || 0;
+
+  let paymentLabel, paymentValue, subLabel;
+
+  switch (loanType) {
+    case 'equalPrincipal':
+      paymentLabel = '첫달 상환금';
+      paymentValue = formatKRW(result.firstPayment);
+      subLabel     = '매월 납부액 감소 (원금균등)';
+      break;
+    case 'bullet':
+      paymentLabel = '월 이자납부';
+      paymentValue = formatKRW(result.monthlyPayment);
+      subLabel     = `만기 일시 상환 원금: ${formatManWon(loanData.principal)}`;
+      break;
+    case 'graduated':
+      paymentLabel = '첫달 상환금';
+      paymentValue = formatKRW(result.firstPayment);
+      subLabel     = `매년 3% 증가 · 마지막 해: ${formatKRW(result.lastYearPayment)}/월`;
+      break;
+    default: // annuity
+      paymentLabel = gracePeriod > 0 ? '상환기간 월 상환금' : '월 상환금';
+      paymentValue = formatKRW(result.monthlyPayment);
+      subLabel     = gracePeriod > 0
+        ? `거치기간 ${gracePeriod}년: ${formatKRW(result.gracePayment)}/월 (이자만)`
+        : null;
+  }
+
   return (
     <View style={styles.summaryCard}>
-      <Text style={styles.summaryLabel}>월 상환금</Text>
-      <Text style={styles.summaryAmount}>{formatKRW(result.monthlyPayment)}</Text>
+      <Text style={styles.summaryTypeLabel}>{TYPE_LABEL[loanType] || ''}</Text>
+      <Text style={styles.summaryLabel}>{paymentLabel}</Text>
+      <Text style={styles.summaryAmount}>{paymentValue}</Text>
+      {subLabel ? <Text style={styles.summarySubLabel}>{subLabel}</Text> : null}
 
-      {/* 대출 조건 3분할 */}
       <View style={styles.condRow}>
         <CondChip label="대출금" value={formatManWon(loanData.principal)} />
         <View style={styles.condDivider} />
         <CondChip label="이율" value={`${loanData.interestRate}%`} />
         <View style={styles.condDivider} />
         <CondChip label="기간" value={`${loanData.period}년`} />
+        {gracePeriod > 0 && (
+          <>
+            <View style={styles.condDivider} />
+            <CondChip label="거치" value={`${gracePeriod}년`} />
+          </>
+        )}
       </View>
     </View>
   );
@@ -159,9 +201,62 @@ function CondChip({ label, value }) {
   );
 }
 
-/* ══════════════════════════════════════ */
-/*  섹션 카드 래퍼                         */
-/* ══════════════════════════════════════ */
+/* ══════════════════════════════════════
+ *  요약정보 섹션 (방식별 행 구성)
+ * ══════════════════════════════════════ */
+function SummarySection({ loanData, result }) {
+  const loanType    = loanData.loanType || 'annuity';
+  const gracePeriod = loanData.gracePeriod || 0;
+
+  return (
+    <SectionCard title="요약정보">
+      <DetailRow label="대출 원금" value={formatKRW(loanData.principal)} />
+
+      {loanType === 'annuity' && (
+        <>
+          {gracePeriod > 0 && (
+            <DetailRow label={`거치기간 월납부 (${gracePeriod}년)`} value={formatKRW(result.gracePayment)} />
+          )}
+          <DetailRow label="상환기간 월 상환금" value={formatKRW(result.monthlyPayment)} highlight />
+        </>
+      )}
+
+      {loanType === 'equalPrincipal' && (
+        <>
+          {gracePeriod > 0 && (
+            <DetailRow label={`거치기간 월납부 (${gracePeriod}년)`} value={formatKRW(result.gracePayment)} />
+          )}
+          <DetailRow label="첫달 상환금 (최대)" value={formatKRW(result.firstPayment)} highlight />
+          <DetailRow label="마지막달 상환금 (최소)" value={formatKRW(result.lastPayment)} />
+        </>
+      )}
+
+      {loanType === 'bullet' && (
+        <>
+          <DetailRow label="월 이자납부" value={formatKRW(result.monthlyPayment)} highlight />
+          <DetailRow label="만기 일시 상환" value={formatKRW(result.maturityPayment)} color="#E53935" />
+        </>
+      )}
+
+      {loanType === 'graduated' && (
+        <>
+          {gracePeriod > 0 && (
+            <DetailRow label={`거치기간 월납부 (${gracePeriod}년)`} value={formatKRW(result.gracePayment)} />
+          )}
+          <DetailRow label="첫달 상환금 (최소)" value={formatKRW(result.firstPayment)} highlight />
+          <DetailRow label="마지막 해 월 상환금" value={formatKRW(result.lastYearPayment)} />
+        </>
+      )}
+
+      <DetailRow label="총 이자"   value={formatKRW(result.totalInterest)} color="#E53935" />
+      <DetailRow label="총 납부액" value={formatKRW(result.totalAmount)} isLast />
+    </SectionCard>
+  );
+}
+
+/* ══════════════════════════════════════
+ *  섹션 카드 래퍼
+ * ══════════════════════════════════════ */
 function SectionCard({ title, children }) {
   return (
     <View style={styles.sectionCard}>
@@ -174,9 +269,9 @@ function SectionCard({ title, children }) {
   );
 }
 
-/* ══════════════════════════════════════ */
-/*  상세 행                               */
-/* ══════════════════════════════════════ */
+/* ══════════════════════════════════════
+ *  상세 행
+ * ══════════════════════════════════════ */
 function DetailRow({ label, value, highlight, color, isLast }) {
   return (
     <View style={[styles.detailRow, !isLast && styles.rowBorder]}>
@@ -192,9 +287,9 @@ function DetailRow({ label, value, highlight, color, isLast }) {
   );
 }
 
-/* ══════════════════════════════════════ */
-/*  비교 뷰                               */
-/* ══════════════════════════════════════ */
+/* ══════════════════════════════════════
+ *  비교 뷰
+ * ══════════════════════════════════════ */
 function CompareView({ loanData, result, compareData, compareResult }) {
   const diff = {
     monthly:  Math.abs(result.monthlyPayment  - compareResult.monthlyPayment),
@@ -220,6 +315,7 @@ function CompareView({ loanData, result, compareData, compareResult }) {
 }
 
 function CompareCard({ label, data, result, color }) {
+  const typeLabel = TYPE_LABEL[data.loanType] || '';
   return (
     <View style={[styles.compareCard, { borderTopColor: color }]}>
       <Text style={[styles.compareCardLabel, { color }]}>{label}</Text>
@@ -229,6 +325,10 @@ function CompareCard({ label, data, result, color }) {
         <Text style={styles.compareDetail}>원금 {formatManWon(data.principal)}</Text>
         <Text style={styles.compareDetail}>금리 {data.interestRate}%</Text>
         <Text style={styles.compareDetail}>기간 {data.period}년</Text>
+        {data.gracePeriod > 0 && (
+          <Text style={styles.compareDetail}>거치 {data.gracePeriod}년</Text>
+        )}
+        <Text style={[styles.compareDetail, { color: '#9E9E9E' }]}>{typeLabel}</Text>
         <Text style={[styles.compareDetail, { color: '#E53935' }]}>이자 {formatKRW(result.totalInterest)}</Text>
       </View>
     </View>
@@ -249,9 +349,9 @@ function DiffRow({ label, value, better, isLast }) {
   );
 }
 
-/* ══════════════════════════════════════ */
-/*  월별 상환 일정 컴포넌트                */
-/* ══════════════════════════════════════ */
+/* ══════════════════════════════════════
+ *  월별 상환 일정 컴포넌트
+ * ══════════════════════════════════════ */
 function YearSeparator({ year }) {
   return (
     <View style={styles.yearSep}>
@@ -262,56 +362,89 @@ function YearSeparator({ year }) {
   );
 }
 
-function ScheduleCard({ item, initialPrincipal }) {
-  const pct = Math.min(100, Math.max(0, item.repaidPct));
+function ScheduleCard({ item, initialPrincipal, loanType }) {
+  const pct    = Math.min(100, Math.max(0, item.repaidPct));
   const isLast = item.balance === 0;
 
   return (
-    <View style={[styles.scheduleCard, isLast && styles.scheduleCardLast]}>
+    <View style={[
+      styles.scheduleCard,
+      isLast   && styles.scheduleCardLast,
+      item.isGrace && styles.scheduleCardGrace,
+    ]}>
+      {/* 거치기간 배지 */}
+      {item.isGrace && (
+        <View style={styles.graceBadge}>
+          <Text style={styles.graceBadgeText}>거치</Text>
+        </View>
+      )}
+
       {/* 회차 + 원금/이자 */}
       <View style={styles.scheduleTop}>
-        <View style={styles.scheduleMonthBadge}>
-          <Text style={styles.scheduleMonthText}>{item.month}</Text>
+        <View style={[styles.scheduleMonthBadge, item.isGrace && styles.scheduleMonthBadgeGrace]}>
+          <Text style={[styles.scheduleMonthText, item.isGrace && styles.scheduleMonthTextGrace]}>
+            {item.month}
+          </Text>
           <Text style={styles.scheduleMonthLabel}>회차</Text>
         </View>
 
         <View style={styles.scheduleAmounts}>
-          <View style={styles.scheduleAmountRow}>
-            <View style={styles.scheduleDot} />
-            <Text style={styles.scheduleAmountLabel}>원금상환</Text>
-            <Text style={styles.scheduleAmountValue}>{formatKRW(item.principal)}</Text>
-          </View>
-          <View style={styles.scheduleAmountRow}>
-            <View style={[styles.scheduleDot, { backgroundColor: '#FF8A80' }]} />
-            <Text style={styles.scheduleAmountLabel}>이자</Text>
-            <Text style={[styles.scheduleAmountValue, { color: '#E53935' }]}>
-              {formatKRW(item.interest)}
-            </Text>
-          </View>
+          {item.isGrace ? (
+            <View style={styles.scheduleAmountRow}>
+              <View style={[styles.scheduleDot, { backgroundColor: '#FFA726' }]} />
+              <Text style={styles.scheduleAmountLabel}>이자납부 (거치)</Text>
+              <Text style={[styles.scheduleAmountValue, { color: '#F57C00' }]}>
+                {formatKRW(item.interest)}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.scheduleAmountRow}>
+                <View style={styles.scheduleDot} />
+                <Text style={styles.scheduleAmountLabel}>
+                  {loanType === 'bullet' && isLast ? '원금상환' : '원금상환'}
+                </Text>
+                <Text style={styles.scheduleAmountValue}>{formatKRW(item.principal)}</Text>
+              </View>
+              <View style={styles.scheduleAmountRow}>
+                <View style={[styles.scheduleDot, { backgroundColor: '#FF8A80' }]} />
+                <Text style={styles.scheduleAmountLabel}>이자</Text>
+                <Text style={[styles.scheduleAmountValue, { color: '#E53935' }]}>
+                  {formatKRW(item.interest)}
+                </Text>
+              </View>
+            </>
+          )}
         </View>
       </View>
 
       {/* 잔여원금 + 진행 바 */}
       <View style={styles.scheduleBottom}>
         <View style={styles.progressBarBg}>
-          <View style={[styles.progressBarFill, { width: `${pct}%` }]} />
+          <View style={[
+            styles.progressBarFill,
+            item.isGrace && styles.progressBarGrace,
+            { width: `${pct}%` },
+          ]} />
         </View>
         <View style={styles.scheduleBalanceRow}>
           <Text style={styles.scheduleBalanceLabel}>
             잔여원금 {isLast ? '완납' : formatKRW(item.balance)}
           </Text>
-          <Text style={styles.scheduleRepaidPct}>{pct.toFixed(1)}% 상환</Text>
+          <Text style={[styles.scheduleRepaidPct, item.isGrace && { color: '#F57C00' }]}>
+            {pct.toFixed(1)}% 상환
+          </Text>
         </View>
       </View>
     </View>
   );
 }
 
-/* ══════════════════════════════════════ */
-/*  스타일                                */
-/* ══════════════════════════════════════ */
+/* ══════════════════════════════════════
+ *  스타일
+ * ══════════════════════════════════════ */
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F0F4FF' },
+  safe:      { flex: 1, backgroundColor: '#F0F4FF' },
   container: { padding: 16, paddingBottom: 16 },
 
   // ── 요약 카드
@@ -326,8 +459,13 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  summaryLabel:  { fontSize: 13, color: '#9FA8DA', marginBottom: 6, textAlign: 'center' },
-  summaryAmount: { fontSize: 36, fontWeight: '800', color: '#FFF', textAlign: 'center', letterSpacing: -0.5, marginBottom: 20 },
+  summaryTypeLabel: {
+    fontSize: 11, color: 'rgba(255,255,255,0.6)', textAlign: 'center',
+    marginBottom: 2, letterSpacing: 0.5,
+  },
+  summaryLabel:    { fontSize: 13, color: '#9FA8DA', marginBottom: 6, textAlign: 'center' },
+  summaryAmount:   { fontSize: 36, fontWeight: '800', color: '#FFF', textAlign: 'center', letterSpacing: -0.5, marginBottom: 8 },
+  summarySubLabel: { fontSize: 12, color: 'rgba(255,255,255,0.75)', textAlign: 'center', marginBottom: 14 },
 
   condRow: {
     flexDirection: 'row',
@@ -335,10 +473,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
   },
-  condChip:       { flex: 1, alignItems: 'center' },
-  condChipLabel:  { fontSize: 11, color: '#9FA8DA', marginBottom: 5 },
-  condChipValue:  { fontSize: 15, fontWeight: '700', color: '#FFF' },
-  condDivider:    { width: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginHorizontal: 4 },
+  condChip:      { flex: 1, alignItems: 'center' },
+  condChipLabel: { fontSize: 11, color: '#9FA8DA', marginBottom: 5 },
+  condChipValue: { fontSize: 13, fontWeight: '700', color: '#FFF' },
+  condDivider:   { width: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginHorizontal: 4 },
 
   // ── 섹션 카드
   sectionCard: {
@@ -353,13 +491,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingTop: 14, paddingBottom: 10,
+    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
   sectionAccent: { width: 3, height: 16, backgroundColor: '#3F51B5', borderRadius: 2, marginRight: 8 },
   sectionTitle:  { fontSize: 13, fontWeight: '700', color: '#1A237E' },
@@ -444,9 +578,18 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  scheduleCardLast: { borderWidth: 1.5, borderColor: '#A5D6A7' },
+  scheduleCardLast:  { borderWidth: 1.5, borderColor: '#A5D6A7' },
+  scheduleCardGrace: { backgroundColor: '#FFFDE7' },
 
-  scheduleTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  graceBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFA726',
+    borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2,
+    marginBottom: 8,
+  },
+  graceBadgeText: { fontSize: 10, fontWeight: '700', color: '#FFF' },
+
+  scheduleTop:    { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
 
   scheduleMonthBadge: {
     width: 46, height: 46,
@@ -455,11 +598,13 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     marginRight: 12,
   },
+  scheduleMonthBadgeGrace: { backgroundColor: '#FFF3E0' },
   scheduleMonthText:  { fontSize: 16, fontWeight: '800', color: '#3F51B5', lineHeight: 18 },
+  scheduleMonthTextGrace: { color: '#F57C00' },
   scheduleMonthLabel: { fontSize: 10, color: '#7986CB' },
 
-  scheduleAmounts: { flex: 1, gap: 5 },
-  scheduleAmountRow: { flexDirection: 'row', alignItems: 'center' },
+  scheduleAmounts:    { flex: 1, gap: 5 },
+  scheduleAmountRow:  { flexDirection: 'row', alignItems: 'center' },
   scheduleDot: {
     width: 7, height: 7, borderRadius: 4,
     backgroundColor: '#5C6BC0', marginRight: 6,
@@ -473,10 +618,9 @@ const styles = StyleSheet.create({
     borderRadius: 3, overflow: 'hidden',
   },
   progressBarFill: {
-    height: '100%',
-    backgroundColor: '#3F51B5',
-    borderRadius: 3,
+    height: '100%', backgroundColor: '#3F51B5', borderRadius: 3,
   },
+  progressBarGrace: { backgroundColor: '#FFA726' },
   scheduleBalanceRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
