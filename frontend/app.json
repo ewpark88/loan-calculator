@@ -5,19 +5,26 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#3F51B5"
+      "backgroundColor": "#1A237E"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.example.loancalculator"
+      "bundleIdentifier": "com.example.loancalculator",
+      "icon": "./assets/icon.png"
     },
     "android": {
-      "package": "com.example.loancalculator"
+      "package": "com.example.loancalculator",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1A237E"
+      }
     },
     "extra": {
       "eas": {

@@ -483,25 +483,25 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   summaryTypeBadgeText: {
-    fontSize: 13, fontWeight: '700', color: '#FFF', letterSpacing: 0.3,
+    fontSize: 15, fontWeight: '700', color: '#FFF', letterSpacing: 0.3,
   },
   summaryLabel: {
-    fontSize: 15, fontWeight: '600', color: '#C5CAE9', marginBottom: 6,
+    fontSize: 17, fontWeight: '600', color: '#C5CAE9', marginBottom: 6,
   },
   summaryAmount: {
-    fontSize: 38, fontWeight: '900', color: '#FFF',
+    fontSize: 42, fontWeight: '900', color: '#FFF',
     letterSpacing: -1, marginBottom: 12,
   },
   summarySubBox: {
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 10,
     paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingVertical: 9,
     marginBottom: 14,
     width: '100%',
   },
   summarySubLabel: {
-    fontSize: 13, fontWeight: '500', color: '#E8EAF6', textAlign: 'center',
+    fontSize: 14, fontWeight: '500', color: '#E8EAF6', textAlign: 'center',
   },
 
   condRow: {
@@ -512,8 +512,8 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   condChip:      { flex: 1, alignItems: 'center' },
-  condChipLabel: { fontSize: 11, fontWeight: '500', color: '#9FA8DA', marginBottom: 5 },
-  condChipValue: { fontSize: 14, fontWeight: '800', color: '#FFF' },
+  condChipLabel: { fontSize: 12, fontWeight: '500', color: '#9FA8DA', marginBottom: 6 },
+  condChipValue: { fontSize: 15, fontWeight: '800', color: '#FFF' },
   condDivider:   { width: 1, backgroundColor: 'rgba(255,255,255,0.25)', marginHorizontal: 4 },
 
   // ── 섹션 카드
@@ -530,40 +530,40 @@ const styles = StyleSheet.create({
   },
   sectionTitleRow: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingTop: 14, paddingBottom: 10,
+    paddingHorizontal: 18, paddingTop: 16, paddingBottom: 12,
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
-  sectionAccent: { width: 3, height: 16, backgroundColor: '#3F51B5', borderRadius: 2, marginRight: 8 },
-  sectionTitle:  { fontSize: 13, fontWeight: '700', color: '#1A237E' },
+  sectionAccent: { width: 4, height: 18, backgroundColor: '#3F51B5', borderRadius: 2, marginRight: 10 },
+  sectionTitle:  { fontSize: 16, fontWeight: '700', color: '#1A237E' },
   sectionContent: {},
 
   // ── 상세 행
   detailRow: {
     flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', paddingHorizontal: 16, paddingVertical: 13,
+    alignItems: 'center', paddingHorizontal: 18, paddingVertical: 15,
   },
   rowBorder:       { borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
-  detailLabel:     { fontSize: 14, color: '#757575' },
-  detailValue:     { fontSize: 15, fontWeight: '600', color: '#1A237E' },
-  detailHighlight: { fontSize: 16, fontWeight: '700', color: '#3F51B5' },
+  detailLabel:     { fontSize: 15, color: '#757575' },
+  detailValue:     { fontSize: 16, fontWeight: '600', color: '#1A237E' },
+  detailHighlight: { fontSize: 18, fontWeight: '700', color: '#3F51B5' },
 
   // ── 버튼
   btnRow: { flexDirection: 'row', gap: 12, marginBottom: 14 },
   saveBtn: {
-    flex: 1, backgroundColor: '#3F51B5', borderRadius: 14, padding: 16, alignItems: 'center',
+    flex: 1, backgroundColor: '#3F51B5', borderRadius: 14, padding: 18, alignItems: 'center',
     shadowColor: '#3F51B5', shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3, shadowRadius: 6, elevation: 4,
   },
   savedBtn:      { backgroundColor: '#43A047' },
-  saveBtnText:   { color: '#FFF', fontSize: 16, fontWeight: '700' },
+  saveBtnText:   { color: '#FFF', fontSize: 17, fontWeight: '700' },
   recalcBtn: {
-    flex: 1, backgroundColor: '#FFF', borderRadius: 14, padding: 16,
+    flex: 1, backgroundColor: '#FFF', borderRadius: 14, padding: 18,
     alignItems: 'center', borderWidth: 1.5, borderColor: '#C5CAE9',
   },
-  recalcBtnText: { color: '#3F51B5', fontSize: 16, fontWeight: '700' },
+  recalcBtnText: { color: '#3F51B5', fontSize: 17, fontWeight: '700' },
 
   // ── 비교
-  compareHeader: { fontSize: 17, fontWeight: '800', color: '#1A237E', textAlign: 'center', marginBottom: 12 },
+  compareHeader: { fontSize: 19, fontWeight: '800', color: '#1A237E', textAlign: 'center', marginBottom: 12 },
   compareRow:    { flexDirection: 'row', gap: 12, marginBottom: 14 },
   compareCard: {
     flex: 1, backgroundColor: '#FFF', borderRadius: 16, borderTopWidth: 4,
@@ -571,24 +571,24 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07, shadowRadius: 6, elevation: 3,
   },
-  compareCardLabel:  { fontSize: 12, fontWeight: '700', marginBottom: 6 },
-  compareCardAmount: { fontSize: 17, fontWeight: '800', color: '#1A237E', marginBottom: 2 },
-  compareCardSub:    { fontSize: 11, color: '#9E9E9E', marginBottom: 10 },
-  compareDetail:     { fontSize: 12, color: '#616161' },
-  betterBadge:     { backgroundColor: '#E8F5E9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  betterBadgeText: { fontSize: 11, fontWeight: '700', color: '#2E7D32' },
+  compareCardLabel:  { fontSize: 14, fontWeight: '700', marginBottom: 6 },
+  compareCardAmount: { fontSize: 19, fontWeight: '800', color: '#1A237E', marginBottom: 2 },
+  compareCardSub:    { fontSize: 13, color: '#9E9E9E', marginBottom: 10 },
+  compareDetail:     { fontSize: 13, color: '#616161' },
+  betterBadge:     { backgroundColor: '#E8F5E9', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 },
+  betterBadgeText: { fontSize: 13, fontWeight: '700', color: '#2E7D32' },
 
   // ── 월별 상환 일정 타이틀
   scheduleTitleRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 4, paddingVertical: 12,
+    paddingHorizontal: 4, paddingVertical: 14,
   },
-  scheduleTitleText: { fontSize: 15, fontWeight: '700', color: '#1A237E' },
+  scheduleTitleText: { fontSize: 17, fontWeight: '700', color: '#1A237E' },
   scheduleBadge: {
     backgroundColor: '#3F51B5', borderRadius: 12,
-    paddingHorizontal: 10, paddingVertical: 4,
+    paddingHorizontal: 12, paddingVertical: 5,
   },
-  scheduleBadgeText: { fontSize: 12, fontWeight: '700', color: '#FFF' },
+  scheduleBadgeText: { fontSize: 13, fontWeight: '700', color: '#FFF' },
 
   // ── 연도 구분자
   yearSep: {
@@ -597,10 +597,10 @@ const styles = StyleSheet.create({
   },
   yearSepLine: { flex: 1, height: 1, backgroundColor: '#C5CAE9' },
   yearSepText: {
-    fontSize: 12, fontWeight: '700', color: '#5C6BC0',
+    fontSize: 13, fontWeight: '700', color: '#5C6BC0',
     marginHorizontal: 10,
     backgroundColor: '#EEF0FB',
-    paddingHorizontal: 10, paddingVertical: 3,
+    paddingHorizontal: 12, paddingVertical: 4,
     borderRadius: 10,
   },
 
@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
   scheduleCard: {
     backgroundColor: '#FFF',
     borderRadius: 14,
-    padding: 14,
+    padding: 16,
     marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -622,46 +622,46 @@ const styles = StyleSheet.create({
   graceBadge: {
     alignSelf: 'flex-start',
     backgroundColor: '#FFA726',
-    borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2,
-    marginBottom: 8,
+    borderRadius: 6, paddingHorizontal: 9, paddingVertical: 3,
+    marginBottom: 10,
   },
-  graceBadgeText: { fontSize: 10, fontWeight: '700', color: '#FFF' },
+  graceBadgeText: { fontSize: 12, fontWeight: '700', color: '#FFF' },
 
-  scheduleTop:    { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  scheduleTop:    { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
 
   scheduleMonthBadge: {
-    width: 46, height: 46,
+    width: 52, height: 52,
     backgroundColor: '#EEF0FB',
-    borderRadius: 12,
+    borderRadius: 13,
     alignItems: 'center', justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   scheduleMonthBadgeGrace: { backgroundColor: '#FFF3E0' },
-  scheduleMonthText:  { fontSize: 16, fontWeight: '800', color: '#3F51B5', lineHeight: 18 },
+  scheduleMonthText:  { fontSize: 18, fontWeight: '800', color: '#3F51B5', lineHeight: 20 },
   scheduleMonthTextGrace: { color: '#F57C00' },
-  scheduleMonthLabel: { fontSize: 10, color: '#7986CB' },
+  scheduleMonthLabel: { fontSize: 12, color: '#7986CB' },
 
-  scheduleAmounts:    { flex: 1, gap: 5 },
+  scheduleAmounts:    { flex: 1, gap: 7 },
   scheduleAmountRow:  { flexDirection: 'row', alignItems: 'center' },
   scheduleDot: {
-    width: 7, height: 7, borderRadius: 4,
-    backgroundColor: '#5C6BC0', marginRight: 6,
+    width: 8, height: 8, borderRadius: 4,
+    backgroundColor: '#5C6BC0', marginRight: 8,
   },
-  scheduleAmountLabel: { fontSize: 12, color: '#9E9E9E', flex: 1 },
-  scheduleAmountValue: { fontSize: 13, fontWeight: '700', color: '#1A237E' },
+  scheduleAmountLabel: { fontSize: 14, color: '#9E9E9E', flex: 1 },
+  scheduleAmountValue: { fontSize: 15, fontWeight: '700', color: '#1A237E' },
 
-  scheduleBottom: { gap: 6 },
+  scheduleBottom: { gap: 7 },
   progressBarBg: {
-    height: 6, backgroundColor: '#E8EAF6',
-    borderRadius: 3, overflow: 'hidden',
+    height: 7, backgroundColor: '#E8EAF6',
+    borderRadius: 4, overflow: 'hidden',
   },
   progressBarFill: {
-    height: '100%', backgroundColor: '#3F51B5', borderRadius: 3,
+    height: '100%', backgroundColor: '#3F51B5', borderRadius: 4,
   },
   progressBarGrace: { backgroundColor: '#FFA726' },
   scheduleBalanceRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  scheduleBalanceLabel: { fontSize: 11, color: '#757575' },
-  scheduleRepaidPct:    { fontSize: 11, fontWeight: '700', color: '#3F51B5' },
+  scheduleBalanceLabel: { fontSize: 13, color: '#757575' },
+  scheduleRepaidPct:    { fontSize: 13, fontWeight: '700', color: '#3F51B5' },
 });

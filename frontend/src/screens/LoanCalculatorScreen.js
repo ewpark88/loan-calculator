@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   container: { padding: 20, paddingBottom: 40 },
 
   sectionLabel: {
-    fontSize: 13, fontWeight: '700', color: '#3F51B5',
+    fontSize: 15, fontWeight: '700', color: '#3F51B5',
     marginBottom: 8, marginTop: 4,
   },
 
@@ -377,81 +377,81 @@ const styles = StyleSheet.create({
   // ── 대출 방식 선택 ──
   typeSection: { padding: 16, paddingBottom: 12 },
   typeSectionLabel: {
-    fontSize: 13, fontWeight: '600', color: '#757575', marginBottom: 10,
+    fontSize: 15, fontWeight: '600', color: '#757575', marginBottom: 10,
   },
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   typeBtn: {
-    paddingHorizontal: 14, paddingVertical: 8,
+    paddingHorizontal: 16, paddingVertical: 10,
     borderRadius: 20, borderWidth: 1.5, borderColor: '#C5CAE9',
     backgroundColor: '#FFF',
   },
   typeBtnActive: { backgroundColor: '#3F51B5', borderColor: '#3F51B5' },
-  typeBtnText:   { fontSize: 13, fontWeight: '600', color: '#5C6BC0' },
+  typeBtnText:   { fontSize: 15, fontWeight: '600', color: '#5C6BC0' },
   typeBtnTextActive: { color: '#FFF' },
 
   typeDescBox: {
-    marginTop: 10, backgroundColor: '#F5F6FF', borderRadius: 10,
-    padding: 10,
+    marginTop: 12, backgroundColor: '#F5F6FF', borderRadius: 12,
+    padding: 13,
   },
-  typeDescText: { fontSize: 12, color: '#5C6BC0', lineHeight: 18 },
+  typeDescText: { fontSize: 14, color: '#5C6BC0', lineHeight: 21 },
 
   // ── 입력 공통 ──
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 15,
+    paddingHorizontal: 18, paddingVertical: 17,
   },
   inputDivider: { height: 1, backgroundColor: '#F5F5F5' },
-  inputLabel:   { flex: 1, fontSize: 15, color: '#424242', fontWeight: '500' },
+  inputLabel:   { flex: 1, fontSize: 17, color: '#424242', fontWeight: '500' },
   inputRight:   { flexDirection: 'row', alignItems: 'center' },
   input: {
     minWidth: 120, textAlign: 'right',
-    fontSize: 16, color: '#1A237E', fontWeight: '600', paddingVertical: 0,
+    fontSize: 18, color: '#1A237E', fontWeight: '600', paddingVertical: 0,
   },
-  inputUnit: { fontSize: 14, color: '#9E9E9E', marginLeft: 6, width: 26 },
+  inputUnit: { fontSize: 16, color: '#9E9E9E', marginLeft: 8, width: 30 },
 
-  principalHintRow: { paddingHorizontal: 16, paddingBottom: 8, marginTop: -4 },
-  principalHint:    { fontSize: 12, color: '#7986CB', fontWeight: '600' },
+  principalHintRow: { paddingHorizontal: 18, paddingBottom: 10, marginTop: -4 },
+  principalHint:    { fontSize: 14, color: '#7986CB', fontWeight: '600' },
 
   quickRow: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 8,
-    paddingHorizontal: 16, paddingBottom: 14,
+    paddingHorizontal: 18, paddingBottom: 16,
   },
   quickBtn: {
     backgroundColor: '#EEF0FB', borderRadius: 20,
-    paddingHorizontal: 12, paddingVertical: 6,
+    paddingHorizontal: 14, paddingVertical: 8,
   },
-  quickBtnText:      { fontSize: 12, color: '#3F51B5', fontWeight: '700' },
+  quickBtnText:      { fontSize: 14, color: '#3F51B5', fontWeight: '700' },
   quickBtnClear: {
     backgroundColor: '#FFF3E0', borderRadius: 20,
-    paddingHorizontal: 12, paddingVertical: 6,
+    paddingHorizontal: 14, paddingVertical: 8,
   },
-  quickBtnClearText: { fontSize: 12, color: '#F57C00', fontWeight: '700' },
+  quickBtnClearText: { fontSize: 14, color: '#F57C00', fontWeight: '700' },
 
   // ── 거치기간 빠른 선택 ──
   graceBtn: {
-    paddingHorizontal: 12, paddingVertical: 6,
+    paddingHorizontal: 14, paddingVertical: 8,
     borderRadius: 20, borderWidth: 1.5, borderColor: '#C5CAE9',
     backgroundColor: '#FFF',
   },
   graceBtnActive:    { backgroundColor: '#3F51B5', borderColor: '#3F51B5' },
-  graceBtnText:      { fontSize: 12, color: '#5C6BC0', fontWeight: '600' },
+  graceBtnText:      { fontSize: 14, color: '#5C6BC0', fontWeight: '600' },
   graceBtnTextActive:{ color: '#FFF' },
 
   // ── 하단 ──
   toggleRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 16,
+    backgroundColor: '#FFF', borderRadius: 16, padding: 18, marginBottom: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
-  toggleLabel: { fontSize: 15, fontWeight: '600', color: '#1A237E' },
-  toggleDesc:  { fontSize: 12, color: '#9E9E9E', marginTop: 2 },
+  toggleLabel: { fontSize: 17, fontWeight: '600', color: '#1A237E' },
+  toggleDesc:  { fontSize: 14, color: '#9E9E9E', marginTop: 3 },
 
   calcBtn: {
-    backgroundColor: '#3F51B5', borderRadius: 16, padding: 18,
+    backgroundColor: '#3F51B5', borderRadius: 16, padding: 20,
     alignItems: 'center', marginTop: 4,
     shadowColor: '#3F51B5', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35, shadowRadius: 8, elevation: 6,
   },
-  calcBtnText: { color: '#FFF', fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
+  calcBtnText: { color: '#FFF', fontSize: 19, fontWeight: '700', letterSpacing: 0.3 },
 });
