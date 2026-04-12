@@ -114,8 +114,18 @@ export default function ResultScreen({ navigation, route }) {
 
   function renderItem({ item }) {
     if (item.type === 'yearHeader') return <YearSeparator year={item.year} />;
+
+    // 3년차마다 (1월 회차) 광고 삽입 — 최대 수익, 최소 방해
+    const showAd = item.type === 'month'
+      && item.monthInYear === 1
+      && item.year > 1
+      && item.year % 3 === 0;
+
     return (
-      <ScheduleCard item={item} initialPrincipal={loanData.principal} loanType={loanType} />
+      <>
+        {showAd && <AdBanner style={{ marginBottom: 8 }} />}
+        <ScheduleCard item={item} initialPrincipal={loanData.principal} loanType={loanType} />
+      </>
     );
   }
 

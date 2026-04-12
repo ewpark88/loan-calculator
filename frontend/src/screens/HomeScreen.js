@@ -1,12 +1,17 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ScrollView, ActivityIndicator,
+  ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useApp } from '../context/AppContext';
 import { formatNumber } from '../utils/loanCalculator';
+import AdBanner from '../components/AdBanner';
+
+// 새로고침 제한: 1분에 최대 3회
+const MAX_REFRESHES  = 3;
+const REFRESH_WINDOW = 60 * 1000;
 
 // 4가지 상환 방식 안내
 const LOAN_TYPE_CARDS = [
@@ -54,8 +59,10 @@ const FEATURES = [
 
 export default function HomeScreen({ navigation }) {
   const { exchangeRates, fetchExchangeRates } = useApp();
-  const [loadingRates, setLoadingRates] = useState(false);
-  const [rateError, setRateError]       = useState(false);
+  const [loadingRates, setLoadingRates]   = useState(false);
+  const [rateError, setRateError]         = useState(false);
+  const [refreshBlocked, setRefreshBlocked] = useState(false);
+  const refreshTimestamps = useRef([]);
 
   useFocusEffect(
     useCallback(() => { loadRates(false); }, [])
@@ -71,6 +78,28 @@ export default function HomeScreen({ navigation }) {
     } finally {
       setLoadingRates(false);
     }
+  }
+
+  function handleManualRefresh() {
+    const now    = Date.now();
+    const recent = refreshTimestamps.current.filter(t => now - t < REFRESH_WINDOW);
+    refreshTimestamps.current = recent;
+
+    if (recent.length >= MAX_REFRESHES) {
+      const oldest   = Math.min(...recent);
+      const waitSec  = Math.ceil((REFRESH_WINDOW - (now - oldest)) / 1000);
+      Alert.alert(
+        '잠시 후 시도해주세요',
+        `1분에 최대 ${MAX_REFRESHES}회까지 새로고침할 수 있습니다.\n약 ${waitSec}초 후에 다시 시도해주세요.`
+      );
+      setRefreshBlocked(true);
+      setTimeout(() => setRefreshBlocked(false), waitSec * 1000);
+      return;
+    }
+
+    refreshTimestamps.current.push(now);
+    setRefreshBlocked(false);
+    loadRates(true);
   }
 
   return (
@@ -94,7 +123,8 @@ export default function HomeScreen({ navigation }) {
           date={exchangeRates?.date}
           loading={loadingRates}
           error={rateError}
-          onRefresh={() => loadRates(true)}
+          blocked={refreshBlocked}
+          onRefresh={handleManualRefresh}
         />
 
         {/* 대출 계산 시작 버튼 */}
@@ -125,6 +155,9 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.arrowBlue}>›</Text>
         </TouchableOpacity>
 
+        {/* 광고 배너 1 */}
+        <AdBanner style={{ marginBottom: 16 }} />
+
         {/* 상환 방식 안내 */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
@@ -141,6 +174,9 @@ export default function HomeScreen({ navigation }) {
             ))}
           </View>
         </View>
+
+        {/* 광고 배너 2 */}
+        <AdBanner style={{ marginBottom: 16 }} />
 
         {/* 기타 주요 기능 */}
         <View style={styles.sectionCard}>
@@ -164,10 +200,11 @@ export default function HomeScreen({ navigation }) {
 /* ──────────────────────────────────── */
 /*  실시간 환율 카드                     */
 /* ──────────────────────────────────── */
-function ExchangeCard({ rates, date, loading, error, onRefresh }) {
+function ExchangeCard({ rates, date, loading, error, blocked, onRefresh }) {
   const krwPerUSD = rates?.USD ? Math.round(1 / rates.USD) : null;
   const krwPerJPY = rates?.JPY ? (1 / rates.JPY).toFixed(2) : null;
   const krwPerEUR = rates?.EUR ? Math.round(1 / rates.EUR) : null;
+  const btnDisabled = loading || blocked;
 
   return (
     <View style={styles.rateCard}>
@@ -176,10 +213,16 @@ function ExchangeCard({ rates, date, loading, error, onRefresh }) {
           <Text style={styles.rateCardTitle}>💱 실시간 환율</Text>
           {date && <Text style={styles.rateDate}>{date} 기준</Text>}
         </View>
-        <TouchableOpacity style={styles.refreshBtn} onPress={onRefresh} disabled={loading}>
+        <TouchableOpacity
+          style={[styles.refreshBtn, btnDisabled && styles.refreshBtnDisabled]}
+          onPress={onRefresh}
+          disabled={btnDisabled}
+        >
           {loading
             ? <ActivityIndicator size="small" color="#3F51B5" />
-            : <Text style={styles.refreshBtnText}>↻ 새로고침</Text>
+            : <Text style={[styles.refreshBtnText, blocked && styles.refreshBtnTextBlocked]}>
+                {blocked ? '⏳ 대기 중' : '↻ 새로고침'}
+              </Text>
           }
         </TouchableOpacity>
       </View>
@@ -255,7 +298,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#EEF0FB', borderRadius: 10,
     minWidth: 90, alignItems: 'center',
   },
-  refreshBtnText: { fontSize: 14, fontWeight: '600', color: '#3F51B5' },
+  refreshBtnText:        { fontSize: 14, fontWeight: '600', color: '#3F51B5' },
+  refreshBtnDisabled:    { backgroundColor: '#F5F5F5' },
+  refreshBtnTextBlocked: { color: '#BDBDBD' },
 
   rateLoading:     { alignItems: 'center', padding: 24, gap: 10 },
   rateLoadingText: { fontSize: 15, color: '#9E9E9E' },

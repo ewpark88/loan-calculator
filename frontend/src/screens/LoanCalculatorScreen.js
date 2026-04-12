@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { calculateLoanByType, formatNumber, formatManWon } from '../utils/loanCalculator';
+import AdBanner from '../components/AdBanner';
 
 /* ──────────────────────────────────── */
 /*  대출 방식 정의                       */
@@ -181,6 +182,8 @@ export default function LoanCalculatorScreen({ navigation, route }) {
             </>
           )}
 
+          <AdBanner style={{ marginBottom: 14 }} />
+
           <TouchableOpacity style={styles.calcBtn} onPress={handleCalculate}>
             <Text style={styles.calcBtnText}>
               {compareMode ? '비교 계산하기' : '계산하기'}
@@ -217,22 +220,60 @@ function LoanInputGroup({ data, onChange }) {
 
   return (
     <View style={styles.inputCard}>
-      {/* ── 대출 방식 선택 ── */}
+      {/* ── 대출 방식 선택 (2×2 격자) ── */}
       <View style={styles.typeSection}>
         <Text style={styles.typeSectionLabel}>상환 방식</Text>
-        <View style={styles.typeGrid}>
-          {LOAN_TYPES.map(t => (
-            <TouchableOpacity
-              key={t.key}
-              style={[styles.typeBtn, data.loanType === t.key && styles.typeBtnActive]}
-              onPress={() => setLoanType(t.key)}
-            >
-              <Text style={[styles.typeBtnText, data.loanType === t.key && styles.typeBtnTextActive]}>
-                {t.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+
+        <View style={styles.typeSegmentWrap}>
+        {/* 상단 2개 */}
+        <View style={styles.typeSegmentRow}>
+          {LOAN_TYPES.slice(0, 2).map((t, idx) => {
+            const isActive = data.loanType === t.key;
+            return (
+              <TouchableOpacity
+                key={t.key}
+                style={[
+                  styles.typeSegmentBtn,
+                  isActive && styles.typeSegmentBtnActive,
+                  idx === 0 && styles.typeSegmentBorderRight,
+                  styles.typeSegmentBorderBottom,
+                ]}
+                onPress={() => setLoanType(t.key)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.typeSegmentText, isActive && styles.typeSegmentTextActive]}>
+                  {t.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
+
+        {/* 하단 2개 */}
+        <View style={styles.typeSegmentRow}>
+          {LOAN_TYPES.slice(2, 4).map((t, idx) => {
+            const isActive = data.loanType === t.key;
+            return (
+              <TouchableOpacity
+                key={t.key}
+                style={[
+                  styles.typeSegmentBtn,
+                  isActive && styles.typeSegmentBtnActive,
+                  idx === 0 && styles.typeSegmentBorderRight,
+                ]}
+                onPress={() => setLoanType(t.key)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.typeSegmentText, isActive && styles.typeSegmentTextActive]}>
+                  {t.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        </View>{/* end typeSegmentWrap */}
+
         {/* 방식 설명 */}
         <View style={styles.typeDescBox}>
           <Text style={styles.typeDescText}>{selectedType.desc}</Text>
@@ -374,20 +415,46 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  // ── 대출 방식 선택 ──
+  // ── 대출 방식 선택 (2×2 세그먼트) ──
   typeSection: { padding: 16, paddingBottom: 12 },
   typeSectionLabel: {
     fontSize: 15, fontWeight: '600', color: '#757575', marginBottom: 10,
   },
-  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  typeBtn: {
-    paddingHorizontal: 16, paddingVertical: 10,
-    borderRadius: 20, borderWidth: 1.5, borderColor: '#C5CAE9',
-    backgroundColor: '#FFF',
+
+  // 세그먼트 컨테이너 (테두리 + overflow hidden으로 깔끔하게)
+  typeSegmentWrap: {
+    borderWidth: 1,
+    borderColor: '#C5CAE9',
+    borderRadius: 12,
+    overflow: 'hidden',
   },
-  typeBtnActive: { backgroundColor: '#3F51B5', borderColor: '#3F51B5' },
-  typeBtnText:   { fontSize: 15, fontWeight: '600', color: '#5C6BC0' },
-  typeBtnTextActive: { color: '#FFF' },
+  typeSegmentRow: {
+    flexDirection: 'row',
+  },
+  typeSegmentBtn: {
+    flex: 1,
+    paddingVertical: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8F9FF',
+  },
+  typeSegmentBtnActive: {
+    backgroundColor: '#3F51B5',
+  },
+  typeSegmentBorderRight: {
+    borderRightWidth: 1,
+    borderRightColor: '#C5CAE9',
+  },
+  typeSegmentBorderBottom: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#C5CAE9',
+  },
+  typeSegmentText: {
+    fontSize: 15, fontWeight: '700', color: '#5C6BC0',
+  },
+  typeSegmentTextActive: {
+    color: '#FFF',
+  },
 
   typeDescBox: {
     marginTop: 12, backgroundColor: '#F5F6FF', borderRadius: 12,
