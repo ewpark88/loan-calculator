@@ -4,7 +4,7 @@ import {
   TouchableOpacity, ActivityIndicator, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { saveLoanHistory } from '../services/api';
+import { saveLocalHistory } from '../services/localHistory';
 import {
   formatKRW, formatManWon, generateScheduleByType,
 } from '../utils/loanCalculator';
@@ -48,17 +48,20 @@ export default function ResultScreen({ navigation, route }) {
   async function handleSave() {
     setSaving(true);
     try {
-      await saveLoanHistory({
+      await saveLocalHistory({
         principal:      loanData.principal,
         interestRate:   loanData.interestRate,
         period:         loanData.period,
+        loanType:       loanData.loanType    || 'annuity',
+        gracePeriod:    loanData.gracePeriod || 0,
         monthlyPayment: result.monthlyPayment,
         totalInterest:  result.totalInterest,
+        totalAmount:    result.totalAmount,
       });
       setSaved(true);
       Alert.alert('저장 완료', '계산 결과가 기록에 저장되었습니다.');
     } catch (err) {
-      Alert.alert('저장 실패', err.message || '백엔드 서버를 확인해주세요.');
+      Alert.alert('저장 실패', err.message || '저장 중 오류가 발생했습니다.');
     } finally {
       setSaving(false);
     }
@@ -170,11 +173,23 @@ function SummaryCard({ loanData, result }) {
 
   return (
     <View style={styles.summaryCard}>
-      <Text style={styles.summaryTypeLabel}>{TYPE_LABEL[loanType] || ''}</Text>
+      {/* 상환 방식 배지 */}
+      <View style={styles.summaryTypeBadge}>
+        <Text style={styles.summaryTypeBadgeText}>{TYPE_LABEL[loanType] || ''}</Text>
+      </View>
+
+      {/* 납부액 레이블 + 금액 */}
       <Text style={styles.summaryLabel}>{paymentLabel}</Text>
       <Text style={styles.summaryAmount}>{paymentValue}</Text>
-      {subLabel ? <Text style={styles.summarySubLabel}>{subLabel}</Text> : null}
 
+      {/* 거치 / 체증식 보조 정보 */}
+      {subLabel ? (
+        <View style={styles.summarySubBox}>
+          <Text style={styles.summarySubLabel}>{subLabel}</Text>
+        </View>
+      ) : null}
+
+      {/* 대출 조건 칩 */}
       <View style={styles.condRow}>
         <CondChip label="대출금" value={formatManWon(loanData.principal)} />
         <View style={styles.condDivider} />
@@ -451,32 +466,55 @@ const styles = StyleSheet.create({
   summaryCard: {
     backgroundColor: '#3F51B5',
     borderRadius: 20,
-    padding: 24,
+    padding: 22,
     marginBottom: 14,
     shadowColor: '#3F51B5',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 12,
     elevation: 8,
+    alignItems: 'center',
   },
-  summaryTypeLabel: {
-    fontSize: 11, color: 'rgba(255,255,255,0.6)', textAlign: 'center',
-    marginBottom: 2, letterSpacing: 0.5,
+  summaryTypeBadge: {
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    marginBottom: 16,
   },
-  summaryLabel:    { fontSize: 13, color: '#9FA8DA', marginBottom: 6, textAlign: 'center' },
-  summaryAmount:   { fontSize: 36, fontWeight: '800', color: '#FFF', textAlign: 'center', letterSpacing: -0.5, marginBottom: 8 },
-  summarySubLabel: { fontSize: 12, color: 'rgba(255,255,255,0.75)', textAlign: 'center', marginBottom: 14 },
+  summaryTypeBadgeText: {
+    fontSize: 13, fontWeight: '700', color: '#FFF', letterSpacing: 0.3,
+  },
+  summaryLabel: {
+    fontSize: 15, fontWeight: '600', color: '#C5CAE9', marginBottom: 6,
+  },
+  summaryAmount: {
+    fontSize: 38, fontWeight: '900', color: '#FFF',
+    letterSpacing: -1, marginBottom: 12,
+  },
+  summarySubBox: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    marginBottom: 14,
+    width: '100%',
+  },
+  summarySubLabel: {
+    fontSize: 13, fontWeight: '500', color: '#E8EAF6', textAlign: 'center',
+  },
 
   condRow: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.14)',
     borderRadius: 14,
     padding: 14,
+    width: '100%',
   },
   condChip:      { flex: 1, alignItems: 'center' },
-  condChipLabel: { fontSize: 11, color: '#9FA8DA', marginBottom: 5 },
-  condChipValue: { fontSize: 13, fontWeight: '700', color: '#FFF' },
-  condDivider:   { width: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginHorizontal: 4 },
+  condChipLabel: { fontSize: 11, fontWeight: '500', color: '#9FA8DA', marginBottom: 5 },
+  condChipValue: { fontSize: 14, fontWeight: '800', color: '#FFF' },
+  condDivider:   { width: 1, backgroundColor: 'rgba(255,255,255,0.25)', marginHorizontal: 4 },
 
   // ── 섹션 카드
   sectionCard: {

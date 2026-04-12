@@ -1,10 +1,14 @@
 import axios from 'axios';
 
 /**
- * 서버 주소 설정 안내:
- *   Android 에뮬레이터  → http://10.0.2.2:3000/api
- *   iOS 시뮬레이터      → http://localhost:3000/api
- *   실제 기기           → http://<컴퓨터 IP>:3000/api  (예: http://192.168.1.100:3000/api)
+ * 백엔드 API (현재 미사용)
+ *
+ * - 환율: AppContext.js 에서 외부 API 직접 호출로 전환됨
+ * - 대출 기록: localHistory.js (AsyncStorage) 로 전환됨
+ *
+ * 추후 서버 기능이 필요할 경우 실제 기기 IP로 BASE_URL 변경 필요:
+ *   Android 에뮬레이터 → http://10.0.2.2:3000/api
+ *   실제 기기          → http://<컴퓨터 IP>:3000/api
  */
 const BASE_URL = 'http://10.0.2.2:3000/api';
 

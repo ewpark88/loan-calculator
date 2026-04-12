@@ -1,34 +1,43 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList,
-  TouchableOpacity, ActivityIndicator, RefreshControl,
+  TouchableOpacity, ActivityIndicator, RefreshControl, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { getLoanHistory } from '../services/api';
-import { formatNumber, formatKRW } from '../utils/loanCalculator';
+import { getLocalHistory, deleteLocalHistory } from '../services/localHistory';
+import { formatKRW, formatManWon } from '../utils/loanCalculator';
 import AdBanner from '../components/AdBanner';
 
+const TYPE_LABEL = {
+  annuity:        '원리금균등',
+  equalPrincipal: '원금균등',
+  bullet:         '만기일시',
+  graduated:      '체증식',
+};
+
+const TYPE_COLOR = {
+  annuity:        '#3F51B5',
+  equalPrincipal: '#00897B',
+  bullet:         '#E53935',
+  graduated:      '#7B1FA2',
+};
+
 export default function HistoryScreen({ navigation }) {
-  const [history, setHistory]   = useState([]);
-  const [loading, setLoading]   = useState(true);
+  const [history, setHistory]       = useState([]);
+  const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError]       = useState(null);
 
   const loadHistory = useCallback(async () => {
-    setError(null);
     try {
-      const data = await getLoanHistory();
+      const data = await getLocalHistory();
       setHistory(data);
-    } catch (err) {
-      setError(err.message || '기록을 불러올 수 없습니다. 서버 연결을 확인해주세요.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  // 화면 포커스마다 새로 로드
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
@@ -47,22 +56,43 @@ export default function HistoryScreen({ navigation }) {
         principal:    item.principal,
         interestRate: item.interestRate,
         period:       item.period,
+        loanType:     item.loanType   || 'annuity',
+        gracePeriod:  item.gracePeriod || 0,
       },
     });
   }
 
+  function handleDelete(item) {
+    Alert.alert(
+      '기록 삭제',
+      '이 기록을 삭제하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제', style: 'destructive',
+          onPress: async () => {
+            await deleteLocalHistory(item.id);
+            loadHistory();
+          },
+        },
+      ]
+    );
+  }
+
   function renderItem({ item, index }) {
-    // 3개마다 배너 광고 삽입
     const showAd = index > 0 && index % 3 === 0;
     return (
       <>
         {showAd && <AdBanner style={{ marginBottom: 12 }} />}
-        <HistoryCard item={item} onPress={() => handleItemPress(item)} />
+        <HistoryCard
+          item={item}
+          onPress={() => handleItemPress(item)}
+          onDelete={() => handleDelete(item)}
+        />
       </>
     );
   }
 
-  // ─ 로딩 중 ─
   if (loading) {
     return (
       <SafeAreaView style={styles.safe} edges={['bottom']}>
@@ -74,29 +104,11 @@ export default function HistoryScreen({ navigation }) {
     );
   }
 
-  // ─ 오류 ─
-  if (error) {
-    return (
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
-        <View style={styles.center}>
-          <Text style={styles.errorIcon}>⚠️</Text>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity
-            style={styles.retryBtn}
-            onPress={() => { setLoading(true); loadHistory(); }}
-          >
-            <Text style={styles.retryBtnText}>다시 시도</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <FlatList
         data={history}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={item => String(item.id)}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
         refreshControl={
@@ -130,35 +142,47 @@ export default function HistoryScreen({ navigation }) {
 /* ─────────────────────────────────────── */
 /*  히스토리 카드                           */
 /* ─────────────────────────────────────── */
-function HistoryCard({ item, onPress }) {
-  const rawDate = item.createdAt ? item.createdAt.replace(' ', 'T') : null;
-  const date = rawDate
-    ? new Date(rawDate).toLocaleDateString('ko-KR', {
+function HistoryCard({ item, onPress, onDelete }) {
+  const date = item.createdAt
+    ? new Date(item.createdAt).toLocaleDateString('ko-KR', {
         year: 'numeric', month: 'long', day: 'numeric',
       })
     : '-';
 
+  const loanType  = item.loanType || 'annuity';
+  const typeLabel = TYPE_LABEL[loanType] || loanType;
+  const typeColor = TYPE_COLOR[loanType] || '#3F51B5';
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
-      {/* 헤더 */}
+      {/* 헤더: 원금 + 날짜 + 삭제 */}
       <View style={styles.cardHeader}>
-        <Text style={styles.cardAmount}>{formatKRW(item.principal)}</Text>
-        <Text style={styles.cardDate}>{date}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardAmount}>{formatManWon(item.principal)}</Text>
+          <Text style={styles.cardDate}>{date}</Text>
+        </View>
+        <TouchableOpacity style={styles.deleteBtn} onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Text style={styles.deleteBtnText}>삭제</Text>
+        </TouchableOpacity>
       </View>
 
       {/* 조건 칩 */}
       <View style={styles.chipRow}>
+        <View style={[styles.typeChip, { backgroundColor: typeColor + '18', borderColor: typeColor + '40' }]}>
+          <Text style={[styles.typeChipText, { color: typeColor }]}>{typeLabel}</Text>
+        </View>
         <Chip icon="📊" label={`금리 ${item.interestRate}%`} />
         <Chip icon="📅" label={`${item.period}년`} />
+        {item.gracePeriod > 0 && <Chip icon="⏳" label={`거치 ${item.gracePeriod}년`} />}
       </View>
 
       {/* 결과 요약 */}
       <View style={styles.statRow}>
-        <StatCell label="월 상환금"  value={formatKRW(item.monthlyPayment)}              />
+        <StatCell label="월 상환금"  value={formatKRW(item.monthlyPayment)} />
         <View style={styles.statDivider} />
         <StatCell label="총 이자"    value={formatKRW(item.totalInterest)}  color="#E53935" />
         <View style={styles.statDivider} />
-        <StatCell label="총 납부액"  value={formatKRW(item.totalAmount)}               />
+        <StatCell label="총 납부액"  value={formatKRW(item.totalAmount)} />
       </View>
 
       <Text style={styles.reloadHint}>↩ 탭하여 다시 계산</Text>
@@ -193,10 +217,6 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
 
   loadingText: { fontSize: 14, color: '#757575', marginTop: 12 },
-  errorIcon:   { fontSize: 40, marginBottom: 12 },
-  errorText:   { fontSize: 15, color: '#757575', textAlign: 'center', marginBottom: 20 },
-  retryBtn:    { backgroundColor: '#3F51B5', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 },
-  retryBtnText:{ color: '#FFF', fontWeight: '700', fontSize: 14 },
 
   card: {
     backgroundColor: '#FFF',
@@ -209,11 +229,32 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
   cardAmount: { fontSize: 18, fontWeight: '800', color: '#1A237E' },
-  cardDate:   { fontSize: 12, color: '#9E9E9E' },
+  cardDate:   { fontSize: 12, color: '#9E9E9E', marginTop: 2 },
 
-  chipRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  deleteBtn: {
+    backgroundColor: '#FFF0F0',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: '#FFCDD2',
+  },
+  deleteBtnText: { fontSize: 12, color: '#E53935', fontWeight: '600' },
+
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
+
+  typeChip: {
+    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4,
+    borderWidth: 1,
+  },
+  typeChipText: { fontSize: 12, fontWeight: '700' },
+
   chip: {
     flexDirection: 'row',
     alignItems: 'center',

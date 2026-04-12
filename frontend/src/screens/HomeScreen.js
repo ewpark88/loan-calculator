@@ -137,7 +137,7 @@ function ExchangeCard({ rates, date, loading, error, onRefresh }) {
       ) : error && !rates ? (
         <View style={styles.rateError}>
           <Text style={styles.rateErrorText}>⚠️  환율을 불러올 수 없습니다</Text>
-          <Text style={styles.rateErrorSub}>백엔드 서버 연결을 확인해주세요</Text>
+          <Text style={styles.rateErrorSub}>네트워크 연결을 확인하고 새로고침 해주세요</Text>
         </View>
       ) : rates ? (
         <View style={styles.rateGrid}>
