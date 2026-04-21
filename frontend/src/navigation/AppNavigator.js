@@ -5,6 +5,8 @@ import HomeScreen from '../screens/HomeScreen';
 import LoanCalculatorScreen from '../screens/LoanCalculatorScreen';
 import ResultScreen from '../screens/ResultScreen';
 import HistoryScreen from '../screens/HistoryScreen';
+import EarlyRepaymentScreen from '../screens/EarlyRepaymentScreen';
+import RealEstateScreen from '../screens/RealEstateScreen';
 
 const Stack = createStackNavigator();
 
@@ -42,6 +44,16 @@ export default function AppNavigator() {
           name="History"
           component={HistoryScreen}
           options={{ title: '계산 기록' }}
+        />
+        <Stack.Screen
+          name="EarlyRepayment"
+          component={EarlyRepaymentScreen}
+          options={{ title: '조기상환 시뮬레이터' }}
+        />
+        <Stack.Screen
+          name="RealEstate"
+          component={RealEstateScreen}
+          options={{ title: '부동산 대출 계산기' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

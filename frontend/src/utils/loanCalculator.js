@@ -394,3 +394,202 @@ export function convertCurrency(krwAmount, rate) {
   if (!rate || rate === 0) return 0;
   return krwAmount * rate;
 }
+
+/* ══════════════════════════════════════
+ *  조기(중도) 상환 시뮬레이션
+ * ══════════════════════════════════════ */
+
+/**
+ * @param {number} principal     - 원래 대출 원금
+ * @param {number} annualRate    - 연 이자율 (%)
+ * @param {number} years         - 대출 기간 (년)
+ * @param {string} loanType      - 상환 방식
+ * @param {number} gracePeriod   - 거치기간 (년)
+ * @param {number} paidMonths    - 지금까지 납부한 개월 수
+ * @param {number} repayAmount   - 중도상환 금액 (원)
+ */
+export function calculateEarlyRepayment({
+  principal, annualRate, years,
+  loanType = 'annuity', gracePeriod = 0,
+  paidMonths, repayAmount,
+}) {
+  const n    = Number(years) * 12;
+  const paid = Number(paidMonths);
+  const repay = Number(repayAmount);
+
+  if (paid < 1 || paid >= n) {
+    return { error: `경과 개월은 1 ~ ${n - 1}개월 사이여야 합니다.` };
+  }
+
+  const schedule = generateScheduleByType(principal, annualRate, years, loanType, gracePeriod);
+  const monthItems = schedule.filter(s => s.type === 'month');
+
+  const currentBalance = monthItems[paid - 1]?.balance ?? Number(principal);
+
+  if (repay <= 0) return { error: '중도상환 금액을 입력해주세요.' };
+  if (repay > currentBalance) {
+    return { error: `중도상환 금액이 잔여 원금(${formatNumber(currentBalance)}원)보다 큽니다.` };
+  }
+
+  const originalRemainingInterest = Math.round(
+    monthItems.slice(paid).reduce((sum, m) => sum + m.interest, 0)
+  );
+
+  const newBalance      = currentBalance - repay;
+  const remainingMonths = n - paid;
+  const r               = Number(annualRate) / 100 / 12;
+  const currentMonthlyPayment = monthItems[paid]?.payment ?? 0;
+
+  if (newBalance === 0) {
+    return {
+      currentBalance, newBalance: 0, repayAmount: repay,
+      originalRemainingInterest, originalRemainingMonths: remainingMonths,
+      fullyRepaid: true,
+      reduceTerm: {
+        newRemainingMonths: 0, monthsReduced: remainingMonths,
+        newMonthlyPayment: 0, newRemainingInterest: 0,
+        interestSaved: originalRemainingInterest,
+      },
+      reducePayment: {
+        newRemainingMonths: 0, newMonthlyPayment: 0,
+        monthlyReduced: currentMonthlyPayment, newRemainingInterest: 0,
+        interestSaved: originalRemainingInterest,
+      },
+    };
+  }
+
+  // 옵션 A: 기간 단축 (납입금 유지)
+  let newTermMonths = remainingMonths;
+  if (r > 0 && currentMonthlyPayment > newBalance * r) {
+    const ratio = currentMonthlyPayment / (currentMonthlyPayment - newBalance * r);
+    newTermMonths = Math.max(1, Math.ceil(Math.log(ratio) / Math.log(1 + r)));
+  } else if (r === 0 && currentMonthlyPayment > 0) {
+    newTermMonths = Math.max(1, Math.ceil(newBalance / currentMonthlyPayment));
+  }
+  newTermMonths = Math.min(newTermMonths, remainingMonths);
+
+  let termInterest = 0, balA = newBalance;
+  for (let i = 0; i < newTermMonths; i++) {
+    const interest    = Math.round(balA * r);
+    const principalPmt = Math.max(0, currentMonthlyPayment - interest);
+    termInterest += interest;
+    balA = Math.max(0, balA - principalPmt);
+  }
+
+  // 옵션 B: 납입금 감소 (기간 유지)
+  let newMonthlyPayment;
+  if (r === 0) {
+    newMonthlyPayment = Math.round(newBalance / remainingMonths);
+  } else {
+    newMonthlyPayment = Math.round(
+      (newBalance * r * Math.pow(1 + r, remainingMonths)) /
+      (Math.pow(1 + r, remainingMonths) - 1)
+    );
+  }
+
+  let paymentInterest = 0, balB = newBalance;
+  for (let i = 0; i < remainingMonths; i++) {
+    const interest    = Math.round(balB * r);
+    const principalPmt = Math.max(0, newMonthlyPayment - interest);
+    paymentInterest += interest;
+    balB = Math.max(0, balB - principalPmt);
+  }
+
+  return {
+    currentBalance, newBalance, repayAmount: repay,
+    originalRemainingInterest, originalRemainingMonths: remainingMonths,
+    fullyRepaid: false,
+    reduceTerm: {
+      newRemainingMonths: newTermMonths,
+      monthsReduced: remainingMonths - newTermMonths,
+      newMonthlyPayment: currentMonthlyPayment,
+      newRemainingInterest: Math.round(termInterest),
+      interestSaved: Math.round(originalRemainingInterest - termInterest),
+    },
+    reducePayment: {
+      newRemainingMonths: remainingMonths,
+      newMonthlyPayment,
+      monthlyReduced: currentMonthlyPayment - newMonthlyPayment,
+      newRemainingInterest: Math.round(paymentInterest),
+      interestSaved: Math.round(originalRemainingInterest - paymentInterest),
+    },
+  };
+}
+
+/* ══════════════════════════════════════
+ *  부동산 담보대출 한도 계산 (LTV + DSR)
+ *  2024년 기준 간소화 적용
+ * ══════════════════════════════════════ */
+
+/**
+ * @param {number} propertyPrice       - 부동산 가격 (원)
+ * @param {string} zone                - 'restricted'(투기과열) | 'adjusted'(조정) | 'normal'(기타)
+ * @param {string} ownership           - 'none'(무주택) | 'one'(1주택) | 'multi'(다주택)
+ * @param {number} annualIncome        - 연 소득 (원)
+ * @param {number} existingMonthlyDebt - 기존 월 부채 상환액 (원)
+ * @param {number} loanRate            - 희망 금리 (%)
+ * @param {number} loanYears           - 대출 기간 (년)
+ */
+export function calculateRealEstateLoan({
+  propertyPrice, zone, ownership,
+  annualIncome, existingMonthlyDebt,
+  loanRate, loanYears,
+}) {
+  const price    = Number(propertyPrice);
+  const income   = Number(annualIncome);
+  const existing = Number(existingMonthlyDebt);
+  const rate     = Number(loanRate);
+  const years    = Number(loanYears);
+  const r = rate / 100 / 12;
+  const n = years * 12;
+
+  // LTV 비율 결정
+  let ltvRate;
+  if (zone === 'restricted') {
+    if (price > 1_500_000_000)      ltvRate = 0;
+    else if (price > 900_000_000)   ltvRate = 0.20;
+    else                            ltvRate = ownership === 'none' ? 0.40 : 0.30;
+  } else if (zone === 'adjusted') {
+    if (price > 900_000_000)        ltvRate = 0.30;
+    else                            ltvRate = ownership === 'none' ? 0.50 : 0.40;
+  } else {
+    ltvRate = ownership === 'multi' ? 0.60 : 0.70;
+  }
+
+  const ltvMaxLoan = Math.round(price * ltvRate);
+
+  // DSR 기준 (은행권 40%)
+  const maxMonthlyNew = Math.max(0, Math.round(income / 12 * 0.40) - existing);
+  let dsrMaxLoan;
+  if (r === 0 || maxMonthlyNew === 0) {
+    dsrMaxLoan = maxMonthlyNew * n;
+  } else {
+    dsrMaxLoan = Math.round(
+      maxMonthlyNew * (Math.pow(1 + r, n) - 1) / (r * Math.pow(1 + r, n))
+    );
+  }
+  dsrMaxLoan = Math.max(0, dsrMaxLoan);
+
+  const maxLoan = Math.min(ltvMaxLoan, dsrMaxLoan);
+
+  let monthlyPayment = 0;
+  if (maxLoan > 0) {
+    monthlyPayment = r > 0
+      ? Math.round((maxLoan * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1))
+      : Math.round(maxLoan / n);
+  }
+
+  return {
+    propertyPrice: price,
+    ltvRate, ltvMaxLoan,
+    dsrMaxLoan,
+    maxMonthlyNew,
+    maxLoan,
+    monthlyPayment,
+    totalInterest: Math.max(0, monthlyPayment * n - maxLoan),
+    isLtvZero: ltvRate === 0,
+    limitedBy: ltvMaxLoan <= dsrMaxLoan ? 'ltv' : 'dsr',
+    loanRate: rate,
+    loanYears: years,
+  };
+}

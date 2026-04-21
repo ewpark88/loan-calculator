@@ -55,6 +55,8 @@ const FEATURES = [
   { icon: '🔀', text: '조건 비교 — 두 가지 대출 조건을 동시에 비교' },
   { icon: '💱', text: '실시간 환율 — USD · JPY · EUR 실시간 조회' },
   { icon: '📋', text: '계산 기록 — 결과 저장 및 재계산 지원' },
+  { icon: '⏩', text: '조기상환 시뮬레이터 — 중도상환 시 이자 절감액 즉시 계산' },
+  { icon: '🏠', text: '부동산 대출 계산기 — LTV·DSR 기준 최대 대출 가능액 산출' },
 ];
 
 export default function HomeScreen({ navigation }) {
@@ -154,6 +156,34 @@ export default function HomeScreen({ navigation }) {
           </View>
           <Text style={styles.arrowBlue}>›</Text>
         </TouchableOpacity>
+
+        {/* 신규 기능 */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionAccent} />
+            <Text style={styles.sectionTitle}>추가 계산기</Text>
+          </View>
+          <View style={styles.newFeatureGrid}>
+            <TouchableOpacity
+              style={[styles.newFeatureCard, { backgroundColor: '#E8EAF6', borderColor: '#9FA8DA' }]}
+              onPress={() => navigation.navigate('EarlyRepayment')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.newFeatureIcon}>⏩</Text>
+              <Text style={[styles.newFeatureTitle, { color: '#3F51B5' }]}>조기상환{'\n'}시뮬레이터</Text>
+              <Text style={styles.newFeatureDesc}>중도상환 시{'\n'}이자 절감액 계산</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.newFeatureCard, { backgroundColor: '#E8F5E9', borderColor: '#A5D6A7' }]}
+              onPress={() => navigation.navigate('RealEstate')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.newFeatureIcon}>🏠</Text>
+              <Text style={[styles.newFeatureTitle, { color: '#2E7D32' }]}>부동산{'\n'}대출 계산기</Text>
+              <Text style={styles.newFeatureDesc}>LTV·DSR 기준{'\n'}최대 대출 산출</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* 광고 배너 1 */}
         <AdBanner style={{ marginBottom: 16 }} />
@@ -378,4 +408,16 @@ const styles = StyleSheet.create({
   featureBorder: { borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
   featureIcon:   { fontSize: 18, marginRight: 14, marginTop: 1 },
   featureText:   { flex: 1, fontSize: 15, color: '#424242', lineHeight: 22 },
+
+  // ── 추가 계산기 2열 그리드
+  newFeatureGrid: {
+    flexDirection: 'row', padding: 12, gap: 10,
+  },
+  newFeatureCard: {
+    flex: 1, borderRadius: 16, padding: 16,
+    borderWidth: 1.5, alignItems: 'flex-start',
+  },
+  newFeatureIcon:  { fontSize: 30, marginBottom: 10 },
+  newFeatureTitle: { fontSize: 15, fontWeight: '800', lineHeight: 22, marginBottom: 6 },
+  newFeatureDesc:  { fontSize: 13, color: '#616161', lineHeight: 19 },
 });
