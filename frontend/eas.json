@@ -4,19 +4,20 @@
     "appVersionSource": "remote"
   },
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    },
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "image": "ubuntu-22.04-jdk-17-ndk-r21e"
+        "buildType": "apk"
+      },
+      "env": {
+        "INCLUDE_ADS": "false"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "INCLUDE_ADS": "true"
+      }
     }
   },
   "submit": {
