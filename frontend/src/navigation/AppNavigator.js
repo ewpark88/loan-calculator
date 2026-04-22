@@ -7,12 +7,13 @@ import ResultScreen from '../screens/ResultScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import EarlyRepaymentScreen from '../screens/EarlyRepaymentScreen';
 import RealEstateScreen from '../screens/RealEstateScreen';
+import RepaymentGuideScreen from '../screens/RepaymentGuideScreen';
 
 const Stack = createStackNavigator();
 
 const headerStyle = {
   headerStyle: {
-    backgroundColor: '#3F51B5',
+    backgroundColor: '#1B998B',
     elevation: 0,
     shadowOpacity: 0,
   },
@@ -28,7 +29,7 @@ export default function AppNavigator() {
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{ title: '대출 계산기' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="LoanCalculator"
@@ -54,6 +55,11 @@ export default function AppNavigator() {
           name="RealEstate"
           component={RealEstateScreen}
           options={{ title: '부동산 대출 계산기' }}
+        />
+        <Stack.Screen
+          name="RepaymentGuide"
+          component={RepaymentGuideScreen}
+          options={{ title: '상환방식 안내' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

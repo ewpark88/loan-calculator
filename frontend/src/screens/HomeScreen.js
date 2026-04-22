@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ScrollView, ActivityIndicator, Alert,
+  ScrollView, ActivityIndicator, Alert, Modal,
+  Animated, Dimensions, TouchableWithoutFeedback,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -9,66 +11,73 @@ import { useApp } from '../context/AppContext';
 import { formatNumber } from '../utils/loanCalculator';
 import AdBanner from '../components/AdBanner';
 
-// 새로고침 제한: 1분에 최대 3회
 const MAX_REFRESHES  = 3;
 const REFRESH_WINDOW = 60 * 1000;
+const SCREEN_WIDTH   = Dimensions.get('window').width;
+const DRAWER_WIDTH   = Math.min(SCREEN_WIDTH * 0.78, 310);
 
-// 4가지 상환 방식 안내
-const LOAN_TYPE_CARDS = [
-  {
-    key: 'annuity',
-    icon: '🔄',
-    title: '원리금균등분할',
-    desc: '매달 동일한 금액을 납부하는 가장 일반적인 방식',
-    color: '#3F51B5',
-    bg: '#EEF0FB',
-  },
-  {
-    key: 'equal',
-    icon: '📉',
-    title: '원금균등분할',
-    desc: '원금을 균등 상환, 시간이 지날수록 납부액 감소',
-    color: '#00897B',
-    bg: '#E0F2F1',
-  },
-  {
-    key: 'bullet',
-    icon: '📅',
-    title: '만기일시상환',
-    desc: '매달 이자만 납부 후 만기에 원금 전액 상환',
-    color: '#C62828',
-    bg: '#FFEBEE',
-  },
-  {
-    key: 'graduated',
-    icon: '📈',
-    title: '체증식분할상환',
-    desc: '납부액이 점차 증가, 보금자리론 등 특수 대출에 적용',
-    color: '#6A1B9A',
-    bg: '#F3E5F5',
-  },
+// ── 따뜻한 컬러 팔레트
+const C = {
+  primary:      '#1B998B',
+  primaryDark:  '#157A6E',
+  primaryLight: '#E3F7F4',
+  orange:       '#FF6B35',
+  orangeLight:  '#FFF0EA',
+  bg:           '#F4FAF8',
+  white:        '#FFFFFF',
+  textDark:     '#1A2E28',
+  textMid:      '#557668',
+  textLight:    '#98BDB5',
+  border:       '#C5E8E2',
+  shadow:       '#1B998B',
+};
+
+const MENU_ITEMS = [
+  { icon: '📊', label: '대출 계산기',       sub: '4가지 상환방식 계산',      screen: 'LoanCalculator', color: '#1B998B', bg: '#E3F7F4' },
+  { icon: '⏩', label: '조기상환 시뮬레이터', sub: '중도상환 이자 절감 계산',   screen: 'EarlyRepayment', color: '#E07A5F', bg: '#FDEEE9' },
+  { icon: '🏠', label: '부동산 대출 계산',   sub: 'LTV·DSR 최대 대출 산출',  screen: 'RealEstate',     color: '#3D6B4F', bg: '#E6F2EB' },
+  { icon: '📖', label: '상환방식 안내',       sub: '4가지 방식 상세 비교',     screen: 'RepaymentGuide', color: '#8B5CF6', bg: '#F3EEFF' },
 ];
 
-// 기타 주요 기능
-const FEATURES = [
-  { icon: '⏳', text: '거치기간 설정 — 이자만 납부하는 기간 별도 지정' },
-  { icon: '🔀', text: '조건 비교 — 두 가지 대출 조건을 동시에 비교' },
-  { icon: '💱', text: '실시간 환율 — USD · JPY · EUR 실시간 조회' },
-  { icon: '📋', text: '계산 기록 — 결과 저장 및 재계산 지원' },
-  { icon: '⏩', text: '조기상환 시뮬레이터 — 중도상환 시 이자 절감액 즉시 계산' },
-  { icon: '🏠', text: '부동산 대출 계산기 — LTV·DSR 기준 최대 대출 가능액 산출' },
+const QUICK_ITEMS = [
+  { icon: '📊', label: '대출\n계산기',     screen: 'LoanCalculator', color: '#1B998B', bg: '#E3F7F4', border: '#A8DED8' },
+  { icon: '⏩', label: '조기상환\n시뮬레이터', screen: 'EarlyRepayment', color: '#E07A5F', bg: '#FDEEE9', border: '#F5C4B5' },
+  { icon: '🏠', label: '부동산\n대출계산',  screen: 'RealEstate',     color: '#3D6B4F', bg: '#E6F2EB', border: '#AACFB9' },
+  { icon: '📖', label: '상환방식\n안내',    screen: 'RepaymentGuide', color: '#8B5CF6', bg: '#F3EEFF', border: '#D1B8FF' },
 ];
 
 export default function HomeScreen({ navigation }) {
   const { exchangeRates, fetchExchangeRates } = useApp();
-  const [loadingRates, setLoadingRates]   = useState(false);
-  const [rateError, setRateError]         = useState(false);
-  const [refreshBlocked, setRefreshBlocked] = useState(false);
+  const [loadingRates, setLoadingRates]       = useState(false);
+  const [rateError, setRateError]             = useState(false);
+  const [refreshBlocked, setRefreshBlocked]   = useState(false);
+  const [menuOpen, setMenuOpen]               = useState(false);
   const refreshTimestamps = useRef([]);
+  const slideAnim   = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
+  const overlayAnim = useRef(new Animated.Value(0)).current;
 
   useFocusEffect(
     useCallback(() => { loadRates(false); }, [])
   );
+
+  function openMenu() {
+    setMenuOpen(true);
+    Animated.parallel([
+      Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 80, friction: 12 }),
+      Animated.timing(overlayAnim, { toValue: 1, duration: 240, useNativeDriver: true }),
+    ]).start();
+  }
+
+  function closeMenu(cb) {
+    Animated.parallel([
+      Animated.timing(slideAnim,   { toValue: -DRAWER_WIDTH, duration: 220, useNativeDriver: true }),
+      Animated.timing(overlayAnim, { toValue: 0,             duration: 220, useNativeDriver: true }),
+    ]).start(() => { setMenuOpen(false); cb?.(); });
+  }
+
+  function handleMenuNavigate(screen) {
+    closeMenu(() => navigation.navigate(screen));
+  }
 
   async function loadRates(force = false) {
     setLoadingRates(true);
@@ -86,40 +95,42 @@ export default function HomeScreen({ navigation }) {
     const now    = Date.now();
     const recent = refreshTimestamps.current.filter(t => now - t < REFRESH_WINDOW);
     refreshTimestamps.current = recent;
-
     if (recent.length >= MAX_REFRESHES) {
-      const oldest   = Math.min(...recent);
-      const waitSec  = Math.ceil((REFRESH_WINDOW - (now - oldest)) / 1000);
-      Alert.alert(
-        '잠시 후 시도해주세요',
-        `1분에 최대 ${MAX_REFRESHES}회까지 새로고침할 수 있습니다.\n약 ${waitSec}초 후에 다시 시도해주세요.`
-      );
+      const oldest  = Math.min(...recent);
+      const waitSec = Math.ceil((REFRESH_WINDOW - (now - oldest)) / 1000);
+      Alert.alert('잠시 후 시도해주세요', `1분에 최대 ${MAX_REFRESHES}회까지 새로고침할 수 있습니다.\n약 ${waitSec}초 후에 다시 시도해주세요.`);
       setRefreshBlocked(true);
       setTimeout(() => setRefreshBlocked(false), waitSec * 1000);
       return;
     }
-
     refreshTimestamps.current.push(now);
     setRefreshBlocked(false);
     loadRates(true);
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Hero */}
-        <View style={styles.hero}>
-          <Text style={styles.heroIcon}>🏦</Text>
-          <Text style={styles.heroTitle}>대출 계산기</Text>
-          <Text style={styles.heroSubtitle}>
-            원리금균등 · 원금균등 · 만기일시 · 체증식
-          </Text>
-        </View>
+    <SafeAreaView style={s.safe} edges={['top', 'bottom']}>
+      <StatusBar backgroundColor={C.primaryDark} barStyle="light-content" />
 
-        {/* 실시간 환율 카드 */}
+      {/* ── 상단바 */}
+      <View style={s.topBar}>
+        <View>
+          <Text style={s.topBarTitle}>대출 계산기</Text>
+          <Text style={s.topBarSub}>스마트 대출 관리 도우미</Text>
+        </View>
+        <TouchableOpacity style={s.hamburgerBtn} onPress={openMenu} activeOpacity={0.7}>
+          <View style={s.hLine} />
+          <View style={[s.hLine, { width: 18 }]} />
+          <View style={s.hLine} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={s.container}
+        showsVerticalScrollIndicator={false}
+        style={{ backgroundColor: C.bg }}
+      >
+        {/* 실시간 환율 */}
         <ExchangeCard
           rates={exchangeRates?.rates}
           date={exchangeRates?.date}
@@ -129,128 +140,163 @@ export default function HomeScreen({ navigation }) {
           onRefresh={handleManualRefresh}
         />
 
-        {/* 대출 계산 시작 버튼 */}
+        {/* 대출 계산 시작 */}
         <TouchableOpacity
-          style={styles.primaryBtn}
+          style={s.ctaBtn}
           onPress={() => navigation.navigate('LoanCalculator')}
-          activeOpacity={0.85}
+          activeOpacity={0.86}
         >
-          <Text style={styles.btnIcon}>📊</Text>
-          <View style={styles.btnTextWrap}>
-            <Text style={styles.primaryBtnTitle}>대출 계산 시작</Text>
-            <Text style={styles.primaryBtnSub}>4가지 상환 방식 · 월 상환금 즉시 계산</Text>
+          <View style={s.ctaIconWrap}>
+            <Text style={s.ctaIconTxt}>📊</Text>
           </View>
-          <Text style={styles.arrowWhite}>›</Text>
+          <View style={s.ctaTexts}>
+            <Text style={s.ctaTitle}>대출 계산 시작</Text>
+            <Text style={s.ctaSub}>4가지 상환방식 · 월 납부금 즉시 계산</Text>
+          </View>
+          <View style={s.ctaArrowWrap}>
+            <Text style={s.ctaArrow}>›</Text>
+          </View>
         </TouchableOpacity>
 
-        {/* 계산 기록 버튼 */}
+        {/* 광고 */}
+        <AdBanner style={{ marginBottom: 14 }} />
+
+        {/* 계산 기록 */}
         <TouchableOpacity
-          style={styles.secondaryBtn}
+          style={s.historyBtn}
           onPress={() => navigation.navigate('History')}
           activeOpacity={0.85}
         >
-          <Text style={styles.btnIcon}>📋</Text>
-          <View style={styles.btnTextWrap}>
-            <Text style={styles.secondaryBtnTitle}>계산 기록 보기</Text>
-            <Text style={styles.secondaryBtnSub}>저장된 이전 계산 결과 확인</Text>
+          <Text style={s.historyIcon}>📋</Text>
+          <View style={s.historyTexts}>
+            <Text style={s.historyTitle}>계산 기록 보기</Text>
+            <Text style={s.historySub}>저장된 이전 계산 결과 확인</Text>
           </View>
-          <Text style={styles.arrowBlue}>›</Text>
+          <Text style={s.historyArrow}>›</Text>
         </TouchableOpacity>
 
-        {/* 신규 기능 */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionAccent} />
-            <Text style={styles.sectionTitle}>추가 계산기</Text>
+        {/* ── 빠른 바로가기 */}
+        <View style={s.quickSection}>
+          <View style={s.quickSectionHeader}>
+            <View style={s.quickAccent} />
+            <Text style={s.quickSectionTitle}>빠른 바로가기</Text>
           </View>
-          <View style={styles.newFeatureGrid}>
-            <TouchableOpacity
-              style={[styles.newFeatureCard, { backgroundColor: '#E8EAF6', borderColor: '#9FA8DA' }]}
-              onPress={() => navigation.navigate('EarlyRepayment')}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.newFeatureIcon}>⏩</Text>
-              <Text style={[styles.newFeatureTitle, { color: '#3F51B5' }]}>조기상환{'\n'}시뮬레이터</Text>
-              <Text style={styles.newFeatureDesc}>중도상환 시{'\n'}이자 절감액 계산</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.newFeatureCard, { backgroundColor: '#E8F5E9', borderColor: '#A5D6A7' }]}
-              onPress={() => navigation.navigate('RealEstate')}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.newFeatureIcon}>🏠</Text>
-              <Text style={[styles.newFeatureTitle, { color: '#2E7D32' }]}>부동산{'\n'}대출 계산기</Text>
-              <Text style={styles.newFeatureDesc}>LTV·DSR 기준{'\n'}최대 대출 산출</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* 광고 배너 1 */}
-        <AdBanner style={{ marginBottom: 16 }} />
-
-        {/* 상환 방식 안내 */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionAccent} />
-            <Text style={styles.sectionTitle}>상환 방식 안내</Text>
-          </View>
-          <View style={styles.typeGrid}>
-            {LOAN_TYPE_CARDS.map(item => (
-              <View key={item.key} style={[styles.typeCard, { backgroundColor: item.bg }]}>
-                <Text style={styles.typeCardIcon}>{item.icon}</Text>
-                <Text style={[styles.typeCardTitle, { color: item.color }]}>{item.title}</Text>
-                <Text style={styles.typeCardDesc}>{item.desc}</Text>
-              </View>
+          <View style={s.quickGrid}>
+            {QUICK_ITEMS.map((item, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={[s.quickCard, { backgroundColor: item.bg, borderColor: item.border }]}
+                onPress={() => navigation.navigate(item.screen)}
+                activeOpacity={0.8}
+              >
+                <Text style={s.quickCardIcon}>{item.icon}</Text>
+                <Text style={[s.quickCardLabel, { color: item.color }]}>{item.label}</Text>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        {/* 광고 배너 2 */}
-        <AdBanner style={{ marginBottom: 16 }} />
-
-        {/* 기타 주요 기능 */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionAccent} />
-            <Text style={styles.sectionTitle}>주요 기능</Text>
+        {/* ── 오늘의 금융 상식 */}
+        <View style={s.tipSection}>
+          <View style={s.tipSectionHeader}>
+            <View style={[s.quickAccent, { backgroundColor: C.orange }]} />
+            <Text style={s.quickSectionTitle}>알아두면 유용한 대출 상식</Text>
           </View>
-          {FEATURES.map((f, i) => (
-            <View key={i} style={[styles.featureRow, i < FEATURES.length - 1 && styles.featureBorder]}>
-              <Text style={styles.featureIcon}>{f.icon}</Text>
-              <Text style={styles.featureText}>{f.text}</Text>
-            </View>
-          ))}
+          <TipCard
+            icon="💡"
+            title="DSR이란?"
+            desc="총부채원리금상환비율. 연소득 대비 연간 원리금 상환액의 비율로, 현재 대출자의 DSR이 40%를 초과하면 추가 대출이 제한됩니다."
+          />
+          <TipCard
+            icon="📌"
+            title="LTV란?"
+            desc="담보인정비율. 집값 대비 대출 가능 금액의 비율입니다. 투기과열지구는 최대 40%, 조정대상지역은 50%, 일반 지역은 70%까지 적용됩니다."
+          />
+          <TipCard
+            icon="⚡"
+            title="중도상환수수료"
+            desc="대출 만기 전 조기상환 시 부과되는 수수료로, 일반적으로 잔여원금의 0.5~1.5% 수준입니다. 보통 3년 이후 면제되는 경우가 많습니다."
+            last
+          />
         </View>
 
       </ScrollView>
+
+      {/* ── 햄버거 드로어 */}
+      {menuOpen && (
+        <Modal visible transparent animationType="none" onRequestClose={() => closeMenu()}>
+          <Animated.View style={[s.overlay, { opacity: overlayAnim }]} pointerEvents="box-none">
+            <TouchableWithoutFeedback onPress={() => closeMenu()}>
+              <View style={StyleSheet.absoluteFill} />
+            </TouchableWithoutFeedback>
+          </Animated.View>
+
+          <Animated.View style={[s.drawer, { transform: [{ translateX: slideAnim }] }]}>
+            <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+              {/* 드로어 헤더 */}
+              <View style={s.drawerHeader}>
+                <View style={s.drawerHeaderLeft}>
+                  <Text style={s.drawerAppIcon}>💰</Text>
+                  <Text style={s.drawerAppName}>대출 계산기</Text>
+                  <Text style={s.drawerAppSub}>스마트 대출 관리 도우미</Text>
+                </View>
+                <TouchableOpacity style={s.drawerCloseBtn} onPress={() => closeMenu()}>
+                  <Text style={s.drawerCloseTxt}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={s.drawerDivider} />
+
+              <View style={s.drawerMenuWrap}>
+                <Text style={s.drawerMenuLabel}>메 뉴</Text>
+                {MENU_ITEMS.map((item, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    style={s.drawerItem}
+                    onPress={() => handleMenuNavigate(item.screen)}
+                    activeOpacity={0.75}
+                  >
+                    <View style={[s.drawerIconBox, { backgroundColor: item.bg }]}>
+                      <Text style={s.drawerIconTxt}>{item.icon}</Text>
+                    </View>
+                    <View style={s.drawerItemTexts}>
+                      <Text style={[s.drawerItemTitle, { color: item.color }]}>{item.label}</Text>
+                      <Text style={s.drawerItemSub}>{item.sub}</Text>
+                    </View>
+                    <Text style={[s.drawerArrow, { color: item.color }]}>›</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </SafeAreaView>
+          </Animated.View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
 
-/* ──────────────────────────────────── */
-/*  실시간 환율 카드                     */
-/* ──────────────────────────────────── */
+/* ── 환율 카드 */
 function ExchangeCard({ rates, date, loading, error, blocked, onRefresh }) {
   const krwPerUSD = rates?.USD ? Math.round(1 / rates.USD) : null;
-  const krwPerJPY = rates?.JPY ? (1 / rates.JPY).toFixed(2) : null;
+  const krwPerJPY = rates?.JPY ? (1 / rates.JPY).toFixed(2)  : null;
   const krwPerEUR = rates?.EUR ? Math.round(1 / rates.EUR) : null;
-  const btnDisabled = loading || blocked;
+  const disabled  = loading || blocked;
 
   return (
-    <View style={styles.rateCard}>
-      <View style={styles.rateCardHeader}>
-        <View style={styles.rateCardTitleRow}>
-          <Text style={styles.rateCardTitle}>💱 실시간 환율</Text>
-          {date && <Text style={styles.rateDate}>{date} 기준</Text>}
+    <View style={s.rateCard}>
+      <View style={s.rateCardTop}>
+        <View style={s.rateTitleRow}>
+          <Text style={s.rateCardTitle}>💱 실시간 환율</Text>
+          {date && <Text style={s.rateDate}>{date} 기준</Text>}
         </View>
         <TouchableOpacity
-          style={[styles.refreshBtn, btnDisabled && styles.refreshBtnDisabled]}
+          style={[s.refreshBtn, disabled && s.refreshBtnOff]}
           onPress={onRefresh}
-          disabled={btnDisabled}
+          disabled={disabled}
         >
           {loading
-            ? <ActivityIndicator size="small" color="#3F51B5" />
-            : <Text style={[styles.refreshBtnText, blocked && styles.refreshBtnTextBlocked]}>
+            ? <ActivityIndicator size="small" color={C.primary} />
+            : <Text style={[s.refreshTxt, blocked && s.refreshTxtOff]}>
                 {blocked ? '⏳ 대기 중' : '↻ 새로고침'}
               </Text>
           }
@@ -258,166 +304,245 @@ function ExchangeCard({ rates, date, loading, error, blocked, onRefresh }) {
       </View>
 
       {loading && !rates ? (
-        <View style={styles.rateLoading}>
-          <ActivityIndicator color="#3F51B5" />
-          <Text style={styles.rateLoadingText}>환율 불러오는 중...</Text>
+        <View style={s.rateCenter}>
+          <ActivityIndicator color={C.primary} />
+          <Text style={s.rateCenterTxt}>환율 불러오는 중...</Text>
         </View>
       ) : error && !rates ? (
-        <View style={styles.rateError}>
-          <Text style={styles.rateErrorText}>⚠️  환율을 불러올 수 없습니다</Text>
-          <Text style={styles.rateErrorSub}>네트워크 연결 확인 후 새로고침 해주세요</Text>
+        <View style={s.rateCenter}>
+          <Text style={s.rateErrTxt}>⚠️  환율을 불러올 수 없습니다</Text>
+          <Text style={s.rateErrSub}>네트워크 확인 후 새로고침 해주세요</Text>
         </View>
       ) : rates ? (
-        <View style={styles.rateGrid}>
-          <RateCell flag="🇺🇸" currency="USD" symbol="$" krw={krwPerUSD} />
-          <View style={styles.rateGridDivider} />
-          <RateCell flag="🇯🇵" currency="JPY" symbol="¥" krw={krwPerJPY} isDecimal />
-          <View style={styles.rateGridDivider} />
-          <RateCell flag="🇪🇺" currency="EUR" symbol="€" krw={krwPerEUR} />
+        <View style={s.rateRow}>
+          <RateCell flag="🇺🇸" currency="USD" symbol="$"  krw={krwPerUSD} />
+          <View style={s.rateDivider} />
+          <RateCell flag="🇯🇵" currency="JPY" symbol="¥"  krw={krwPerJPY} decimal />
+          <View style={s.rateDivider} />
+          <RateCell flag="🇪🇺" currency="EUR" symbol="€"  krw={krwPerEUR} />
         </View>
       ) : null}
     </View>
   );
 }
 
-function RateCell({ flag, currency, symbol, krw, isDecimal }) {
-  const display = krw != null
-    ? (isDecimal ? `₩${krw}` : `₩${formatNumber(krw)}`)
-    : '-';
+function RateCell({ flag, currency, symbol, krw, decimal }) {
+  const display = krw != null ? (decimal ? `₩${krw}` : `₩${formatNumber(krw)}`) : '-';
   return (
-    <View style={styles.rateCell}>
-      <Text style={styles.rateCellFlag}>{flag}</Text>
-      <Text style={styles.rateCellCurrency}>{currency}</Text>
-      <Text style={styles.rateCellLabel}>1{symbol} =</Text>
-      <Text style={styles.rateCellValue}>{display}</Text>
+    <View style={s.rateCell}>
+      <Text style={s.rateCellFlag}>{flag}</Text>
+      <Text style={s.rateCellCur}>{currency}</Text>
+      <Text style={s.rateCellLbl}>1{symbol} =</Text>
+      <Text style={s.rateCellVal}>{display}</Text>
     </View>
   );
 }
 
-/* ──────────────────────────────────── */
-/*  스타일                               */
-/* ──────────────────────────────────── */
-const styles = StyleSheet.create({
-  safe:      { flex: 1, backgroundColor: '#F0F4FF' },
-  container: { padding: 20, paddingBottom: 48 },
+/* ── 금융 상식 카드 */
+function TipCard({ icon, title, desc, last }) {
+  return (
+    <View style={[s.tipCard, !last && s.tipCardBorder]}>
+      <View style={s.tipCardLeft}>
+        <View style={s.tipIconWrap}>
+          <Text style={s.tipIconTxt}>{icon}</Text>
+        </View>
+      </View>
+      <View style={s.tipCardRight}>
+        <Text style={s.tipCardTitle}>{title}</Text>
+        <Text style={s.tipCardDesc}>{desc}</Text>
+      </View>
+    </View>
+  );
+}
 
-  // ── Hero
-  hero: { alignItems: 'center', paddingVertical: 28 },
-  heroIcon:     { fontSize: 60, marginBottom: 12 },
-  heroTitle:    { fontSize: 34, fontWeight: '800', color: '#1A237E', marginBottom: 6 },
-  heroSubtitle: { fontSize: 15, color: '#7986CB', textAlign: 'center', lineHeight: 22 },
+/* ── 스타일 */
+const s = StyleSheet.create({
+  safe:      { flex: 1, backgroundColor: C.primaryDark },
+  container: { padding: 16, paddingBottom: 48 },
 
-  // ── 환율 카드
-  rateCard: {
-    backgroundColor: '#FFF', borderRadius: 18, marginBottom: 16,
-    overflow: 'hidden',
-    shadowColor: '#3F51B5', shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
+  // 상단바
+  topBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: C.primary,
+    paddingHorizontal: 20, paddingVertical: 14,
   },
-  rateCardHeader: {
+  topBarTitle: { fontSize: 20, fontWeight: '800', color: '#FFF', letterSpacing: 0.2 },
+  topBarSub:   { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  hamburgerBtn: { padding: 8, gap: 5, alignItems: 'flex-end' },
+  hLine: { width: 24, height: 2.5, backgroundColor: '#FFF', borderRadius: 2 },
+
+  // 환율 카드
+  rateCard: {
+    backgroundColor: C.white, borderRadius: 20, marginBottom: 14,
+    overflow: 'hidden',
+    shadowColor: C.shadow, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12, shadowRadius: 10, elevation: 5,
+  },
+  rateCardTop: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 18, paddingVertical: 14,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
-    backgroundColor: '#FAFBFF',
+    backgroundColor: C.primaryLight,
+    borderBottomWidth: 1, borderBottomColor: C.border,
   },
-  rateCardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  rateCardTitle:    { fontSize: 16, fontWeight: '700', color: '#1A237E' },
-  rateDate:         { fontSize: 13, color: '#9E9E9E' },
+  rateTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  rateCardTitle:{ fontSize: 15, fontWeight: '700', color: C.primaryDark },
+  rateDate:     { fontSize: 12, color: C.textLight },
   refreshBtn: {
     paddingHorizontal: 12, paddingVertical: 7,
-    backgroundColor: '#EEF0FB', borderRadius: 10,
-    minWidth: 90, alignItems: 'center',
+    backgroundColor: C.white, borderRadius: 10,
+    borderWidth: 1, borderColor: C.border,
+    minWidth: 88, alignItems: 'center',
   },
-  refreshBtnText:        { fontSize: 14, fontWeight: '600', color: '#3F51B5' },
-  refreshBtnDisabled:    { backgroundColor: '#F5F5F5' },
-  refreshBtnTextBlocked: { color: '#BDBDBD' },
+  refreshBtnOff: { backgroundColor: '#F5F5F5', borderColor: '#E0E0E0' },
+  refreshTxt:    { fontSize: 13, fontWeight: '600', color: C.primary },
+  refreshTxtOff: { color: '#BDBDBD' },
+  rateCenter:    { alignItems: 'center', padding: 24, gap: 8 },
+  rateCenterTxt: { fontSize: 14, color: C.textMid },
+  rateErrTxt:    { fontSize: 14, color: '#E07A5F', fontWeight: '600' },
+  rateErrSub:    { fontSize: 12, color: C.textLight, marginTop: 4 },
+  rateRow:       { flexDirection: 'row', paddingVertical: 20, paddingHorizontal: 8 },
+  rateDivider:   { width: 1, backgroundColor: C.border, marginVertical: 6 },
+  rateCell:      { flex: 1, alignItems: 'center', gap: 5 },
+  rateCellFlag:  { fontSize: 26 },
+  rateCellCur:   { fontSize: 14, fontWeight: '700', color: C.primary },
+  rateCellLbl:   { fontSize: 11, color: C.textLight },
+  rateCellVal:   { fontSize: 18, fontWeight: '800', color: C.textDark },
 
-  rateLoading:     { alignItems: 'center', padding: 24, gap: 10 },
-  rateLoadingText: { fontSize: 15, color: '#9E9E9E' },
-  rateError:       { alignItems: 'center', padding: 20 },
-  rateErrorText:   { fontSize: 15, color: '#E53935', fontWeight: '600' },
-  rateErrorSub:    { fontSize: 13, color: '#9E9E9E', marginTop: 6 },
-
-  rateGrid: { flexDirection: 'row', paddingVertical: 20, paddingHorizontal: 8 },
-  rateGridDivider: { width: 1, backgroundColor: '#EEEEEE', marginVertical: 4 },
-
-  rateCell:         { flex: 1, alignItems: 'center', gap: 5 },
-  rateCellFlag:     { fontSize: 26 },
-  rateCellCurrency: { fontSize: 15, fontWeight: '700', color: '#3F51B5' },
-  rateCellLabel:    { fontSize: 13, color: '#9E9E9E' },
-  rateCellValue:    { fontSize: 18, fontWeight: '800', color: '#1A237E' },
-
-  // ── 버튼
-  primaryBtn: {
+  // CTA 버튼
+  ctaBtn: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#3F51B5', borderRadius: 16,
-    padding: 22, marginBottom: 12,
-    shadowColor: '#3F51B5', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3, shadowRadius: 8, elevation: 6,
+    backgroundColor: C.orange,
+    borderRadius: 18, padding: 18, marginBottom: 12,
+    shadowColor: C.orange, shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.35, shadowRadius: 10, elevation: 7,
   },
-  secondaryBtn: {
+  ctaIconWrap: {
+    width: 52, height: 52, borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center', justifyContent: 'center',
+    marginRight: 14,
+  },
+  ctaIconTxt: { fontSize: 26 },
+  ctaTexts:   { flex: 1 },
+  ctaTitle:   { fontSize: 18, fontWeight: '800', color: '#FFF', marginBottom: 4 },
+  ctaSub:     { fontSize: 13, color: 'rgba(255,255,255,0.82)' },
+  ctaArrowWrap: {
+    width: 32, height: 32, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  ctaArrow: { fontSize: 22, color: '#FFF', fontWeight: '700', marginTop: -1 },
+
+  // 기록 버튼
+  historyBtn: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#FFF', borderRadius: 16,
-    padding: 22, marginBottom: 20,
-    borderWidth: 1.5, borderColor: '#C5CAE9',
+    backgroundColor: C.white, borderRadius: 18,
+    padding: 18, marginBottom: 16,
+    borderWidth: 1.5, borderColor: C.border,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
-  btnIcon:           { fontSize: 30, marginRight: 16 },
-  btnTextWrap:       { flex: 1 },
-  primaryBtnTitle:   { fontSize: 19, fontWeight: '700', color: '#FFF', marginBottom: 4 },
-  primaryBtnSub:     { fontSize: 14, color: '#C5CAE9' },
-  secondaryBtnTitle: { fontSize: 19, fontWeight: '700', color: '#1A237E', marginBottom: 4 },
-  secondaryBtnSub:   { fontSize: 14, color: '#9E9E9E' },
-  arrowWhite:        { fontSize: 30, color: '#FFF', fontWeight: '300' },
-  arrowBlue:         { fontSize: 30, color: '#3F51B5', fontWeight: '300' },
+  historyIcon:   { fontSize: 28, marginRight: 14 },
+  historyTexts:  { flex: 1 },
+  historyTitle:  { fontSize: 17, fontWeight: '700', color: C.textDark, marginBottom: 3 },
+  historySub:    { fontSize: 13, color: C.textMid },
+  historyArrow:  { fontSize: 26, color: C.primary, fontWeight: '300' },
 
-  // ── 섹션 카드 공통
-  sectionCard: {
-    backgroundColor: '#FFF', borderRadius: 18, marginBottom: 16,
+  // 빠른 바로가기
+  quickSection: {
+    backgroundColor: C.white, borderRadius: 20, marginBottom: 14,
+    padding: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+  },
+  quickSectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  quickAccent:        { width: 4, height: 18, backgroundColor: C.primary, borderRadius: 2, marginRight: 10 },
+  quickSectionTitle:  { fontSize: 16, fontWeight: '700', color: C.textDark },
+  quickGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 10,
+  },
+  quickCard: {
+    width: (SCREEN_WIDTH - 32 - 32 - 10) / 2,
+    borderRadius: 16, borderWidth: 1.5,
+    padding: 16, alignItems: 'center',
+  },
+  quickCardIcon:  { fontSize: 30, marginBottom: 8 },
+  quickCardLabel: { fontSize: 13, fontWeight: '700', textAlign: 'center', lineHeight: 19 },
+
+  // 금융 상식
+  tipSection: {
+    backgroundColor: C.white, borderRadius: 20, marginBottom: 8,
     overflow: 'hidden',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
-  sectionHeader: {
+  tipSectionHeader: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 18, paddingTop: 16, paddingBottom: 12,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    padding: 16, paddingBottom: 12,
+    borderBottomWidth: 1, borderBottomColor: '#F5F5F5',
   },
-  sectionAccent: { width: 4, height: 18, backgroundColor: '#3F51B5', borderRadius: 2, marginRight: 10 },
-  sectionTitle:  { fontSize: 17, fontWeight: '700', color: '#1A237E' },
+  tipCard: { flexDirection: 'row', padding: 14, alignItems: 'flex-start' },
+  tipCardBorder: { borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
+  tipCardLeft:   { marginRight: 12 },
+  tipIconWrap: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: C.primaryLight,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  tipIconTxt:    { fontSize: 18 },
+  tipCardRight:  { flex: 1 },
+  tipCardTitle:  { fontSize: 14, fontWeight: '700', color: C.primaryDark, marginBottom: 4 },
+  tipCardDesc:   { fontSize: 13, color: C.textMid, lineHeight: 20 },
 
-  // ── 상환 방식 2×2 그리드
-  typeGrid: {
-    flexDirection: 'row', flexWrap: 'wrap',
-    padding: 12, gap: 10,
+  // 드로어 오버레이
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.42)',
+    zIndex: 10,
   },
-  typeCard: {
-    width: '47%', borderRadius: 14,
-    padding: 14,
-  },
-  typeCardIcon:  { fontSize: 26, marginBottom: 8 },
-  typeCardTitle: { fontSize: 15, fontWeight: '700', marginBottom: 6 },
-  typeCardDesc:  { fontSize: 13, color: '#616161', lineHeight: 19 },
 
-  // ── 주요 기능 리스트
-  featureRow: {
-    flexDirection: 'row', alignItems: 'flex-start',
-    paddingHorizontal: 18, paddingVertical: 14,
+  // 드로어
+  drawer: {
+    position: 'absolute', left: 0, top: 0, bottom: 0,
+    width: DRAWER_WIDTH,
+    backgroundColor: C.white,
+    zIndex: 20,
+    shadowColor: '#000', shadowOffset: { width: 5, height: 0 },
+    shadowOpacity: 0.15, shadowRadius: 14, elevation: 20,
   },
-  featureBorder: { borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
-  featureIcon:   { fontSize: 18, marginRight: 14, marginTop: 1 },
-  featureText:   { flex: 1, fontSize: 15, color: '#424242', lineHeight: 22 },
-
-  // ── 추가 계산기 2열 그리드
-  newFeatureGrid: {
-    flexDirection: 'row', padding: 12, gap: 10,
+  drawerHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
+    backgroundColor: C.primary,
+    paddingHorizontal: 20, paddingTop: 28, paddingBottom: 24,
   },
-  newFeatureCard: {
-    flex: 1, borderRadius: 16, padding: 16,
-    borderWidth: 1.5, alignItems: 'flex-start',
+  drawerHeaderLeft: { flex: 1 },
+  drawerAppIcon: { fontSize: 34, marginBottom: 8 },
+  drawerAppName: { fontSize: 20, fontWeight: '800', color: '#FFF', marginBottom: 3 },
+  drawerAppSub:  { fontSize: 12, color: 'rgba(255,255,255,0.7)' },
+  drawerCloseBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20, width: 34, height: 34,
+    alignItems: 'center', justifyContent: 'center', marginTop: 2,
   },
-  newFeatureIcon:  { fontSize: 30, marginBottom: 10 },
-  newFeatureTitle: { fontSize: 15, fontWeight: '800', lineHeight: 22, marginBottom: 6 },
-  newFeatureDesc:  { fontSize: 13, color: '#616161', lineHeight: 19 },
+  drawerCloseTxt: { fontSize: 15, color: '#FFF', fontWeight: '700' },
+  drawerDivider:  { height: 1, backgroundColor: '#F0F0F0' },
+  drawerMenuWrap: { paddingHorizontal: 14, paddingTop: 18 },
+  drawerMenuLabel: {
+    fontSize: 11, fontWeight: '700', color: '#ADADAD',
+    letterSpacing: 1.8, marginBottom: 10, paddingLeft: 6,
+  },
+  drawerItem: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 13, paddingHorizontal: 6,
+    borderRadius: 14, marginBottom: 2,
+  },
+  drawerIconBox: {
+    width: 46, height: 46, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center', marginRight: 12,
+  },
+  drawerIconTxt:    { fontSize: 22 },
+  drawerItemTexts:  { flex: 1 },
+  drawerItemTitle:  { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+  drawerItemSub:    { fontSize: 12, color: '#ADADAD', lineHeight: 17 },
+  drawerArrow:      { fontSize: 22, fontWeight: '300', marginLeft: 4 },
 });

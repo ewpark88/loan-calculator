@@ -193,22 +193,5 @@ npm rebuild better-sqlite3
 
 
 ## 개발앱 다운로드 apk
-순서
-1단계 — EAS CLI 설치 & 로그인
-
-npm install -g eas-cli
-eas login
-Expo 계정이 없으면 https://expo.dev 에서 무료 가입 후 로그인
-
-2단계 — APK 빌드 시작
-
-cd D:\ad\workspace\loan-calculator\frontend
-eas build --platform android --profile preview
-3단계 — 기다리기 (약 10~15분)
-
-빌드가 Expo 클라우드 서버에서 진행됩니다
-완료되면 터미널에 다운로드 링크가 출력됩니다
-4단계 — APK 다운로드 & 설치
-
-링크에서 .apk 파일 다운로드
-폰에서 "알 수 없는 앱 설치 허용" 설정 후 설치
+adb devices
+npx expo run:android

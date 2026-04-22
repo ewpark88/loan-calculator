@@ -469,82 +469,52 @@ function ScheduleCard({ item, initialPrincipal, loanType }) {
  *  스타일
  * ══════════════════════════════════════ */
 const styles = StyleSheet.create({
-  safe:      { flex: 1, backgroundColor: '#F0F4FF' },
+  safe:      { flex: 1, backgroundColor: '#F4FAF8' },
   container: { padding: 16, paddingBottom: 16 },
 
   // ── 요약 카드
   summaryCard: {
-    backgroundColor: '#3F51B5',
-    borderRadius: 20,
-    padding: 22,
-    marginBottom: 14,
-    shadowColor: '#3F51B5',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
-    alignItems: 'center',
+    backgroundColor: '#1B998B',
+    borderRadius: 20, padding: 22, marginBottom: 14,
+    shadowColor: '#1B998B', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35, shadowRadius: 12, elevation: 8, alignItems: 'center',
   },
   summaryTypeBadge: {
     backgroundColor: 'rgba(255,255,255,0.22)',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    marginBottom: 16,
+    borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, marginBottom: 16,
   },
-  summaryTypeBadgeText: {
-    fontSize: 15, fontWeight: '700', color: '#FFF', letterSpacing: 0.3,
-  },
-  summaryLabel: {
-    fontSize: 17, fontWeight: '600', color: '#C5CAE9', marginBottom: 6,
-  },
-  summaryAmount: {
-    fontSize: 42, fontWeight: '900', color: '#FFF',
-    letterSpacing: -1, marginBottom: 12,
-  },
+  summaryTypeBadgeText: { fontSize: 16, fontWeight: '700', color: '#FFF', letterSpacing: 0.3 },
+  summaryLabel:  { fontSize: 17, fontWeight: '600', color: 'rgba(255,255,255,0.8)', marginBottom: 6 },
+  summaryAmount: { fontSize: 42, fontWeight: '900', color: '#FFF', letterSpacing: -1, marginBottom: 12 },
   summarySubBox: {
     backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    marginBottom: 14,
-    width: '100%',
+    borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9,
+    marginBottom: 14, width: '100%',
   },
-  summarySubLabel: {
-    fontSize: 14, fontWeight: '500', color: '#E8EAF6', textAlign: 'center',
-  },
+  summarySubLabel: { fontSize: 15, fontWeight: '500', color: 'rgba(255,255,255,0.9)', textAlign: 'center' },
 
   condRow: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    borderRadius: 14,
-    padding: 14,
-    width: '100%',
+    flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.14)',
+    borderRadius: 14, padding: 14, width: '100%',
   },
   condChip:      { flex: 1, alignItems: 'center' },
-  condChipLabel: { fontSize: 12, fontWeight: '500', color: '#9FA8DA', marginBottom: 6 },
-  condChipValue: { fontSize: 15, fontWeight: '800', color: '#FFF' },
+  condChipLabel: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.7)', marginBottom: 6 },
+  condChipValue: { fontSize: 16, fontWeight: '800', color: '#FFF' },
   condDivider:   { width: 1, backgroundColor: 'rgba(255,255,255,0.25)', marginHorizontal: 4 },
 
   // ── 섹션 카드
   sectionCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    marginBottom: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
-    elevation: 3,
-    overflow: 'hidden',
+    backgroundColor: '#FFF', borderRadius: 16, marginBottom: 14,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07, shadowRadius: 6, elevation: 3, overflow: 'hidden',
   },
   sectionTitleRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 18, paddingTop: 16, paddingBottom: 12,
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
-  sectionAccent: { width: 4, height: 18, backgroundColor: '#3F51B5', borderRadius: 2, marginRight: 10 },
-  sectionTitle:  { fontSize: 16, fontWeight: '700', color: '#1A237E' },
+  sectionAccent:  { width: 4, height: 20, backgroundColor: '#1B998B', borderRadius: 2, marginRight: 10 },
+  sectionTitle:   { fontSize: 17, fontWeight: '700', color: '#1A2E28' },
   sectionContent: {},
 
   // ── 상세 행
@@ -553,27 +523,27 @@ const styles = StyleSheet.create({
     alignItems: 'center', paddingHorizontal: 18, paddingVertical: 15,
   },
   rowBorder:       { borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
-  detailLabel:     { fontSize: 15, color: '#757575' },
-  detailValue:     { fontSize: 16, fontWeight: '600', color: '#1A237E' },
-  detailHighlight: { fontSize: 18, fontWeight: '700', color: '#3F51B5' },
+  detailLabel:     { fontSize: 16, color: '#557668' },
+  detailValue:     { fontSize: 17, fontWeight: '600', color: '#1A2E28' },
+  detailHighlight: { fontSize: 19, fontWeight: '700', color: '#1B998B' },
 
   // ── 버튼
   btnRow: { flexDirection: 'row', gap: 12, marginBottom: 14 },
   saveBtn: {
-    flex: 1, backgroundColor: '#3F51B5', borderRadius: 14, padding: 18, alignItems: 'center',
-    shadowColor: '#3F51B5', shadowOffset: { width: 0, height: 3 },
+    flex: 1, backgroundColor: '#1B998B', borderRadius: 14, padding: 18, alignItems: 'center',
+    shadowColor: '#1B998B', shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3, shadowRadius: 6, elevation: 4,
   },
   savedBtn:      { backgroundColor: '#43A047' },
   saveBtnText:   { color: '#FFF', fontSize: 17, fontWeight: '700' },
   recalcBtn: {
     flex: 1, backgroundColor: '#FFF', borderRadius: 14, padding: 18,
-    alignItems: 'center', borderWidth: 1.5, borderColor: '#C5CAE9',
+    alignItems: 'center', borderWidth: 1.5, borderColor: '#C5E8E2',
   },
-  recalcBtnText: { color: '#3F51B5', fontSize: 17, fontWeight: '700' },
+  recalcBtnText: { color: '#1B998B', fontSize: 17, fontWeight: '700' },
 
   // ── 비교
-  compareHeader: { fontSize: 19, fontWeight: '800', color: '#1A237E', textAlign: 'center', marginBottom: 12 },
+  compareHeader: { fontSize: 20, fontWeight: '800', color: '#1A2E28', textAlign: 'center', marginBottom: 12 },
   compareRow:    { flexDirection: 'row', gap: 12, marginBottom: 14 },
   compareCard: {
     flex: 1, backgroundColor: '#FFF', borderRadius: 16, borderTopWidth: 4,
@@ -581,89 +551,74 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07, shadowRadius: 6, elevation: 3,
   },
-  compareCardLabel:  { fontSize: 14, fontWeight: '700', marginBottom: 6 },
-  compareCardAmount: { fontSize: 19, fontWeight: '800', color: '#1A237E', marginBottom: 2 },
-  compareCardSub:    { fontSize: 13, color: '#9E9E9E', marginBottom: 10 },
-  compareDetail:     { fontSize: 13, color: '#616161' },
+  compareCardLabel:  { fontSize: 15, fontWeight: '700', marginBottom: 6 },
+  compareCardAmount: { fontSize: 20, fontWeight: '800', color: '#1A2E28', marginBottom: 2 },
+  compareCardSub:    { fontSize: 14, color: '#9E9E9E', marginBottom: 10 },
+  compareDetail:     { fontSize: 14, color: '#555' },
   betterBadge:     { backgroundColor: '#E8F5E9', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 },
-  betterBadgeText: { fontSize: 13, fontWeight: '700', color: '#2E7D32' },
+  betterBadgeText: { fontSize: 14, fontWeight: '700', color: '#2E7D32' },
 
   // ── 월별 상환 일정 타이틀
   scheduleTitleRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 4, paddingVertical: 14,
   },
-  scheduleTitleText: { fontSize: 17, fontWeight: '700', color: '#1A237E' },
+  scheduleTitleText: { fontSize: 18, fontWeight: '700', color: '#1A2E28' },
   scheduleBadge: {
-    backgroundColor: '#3F51B5', borderRadius: 12,
-    paddingHorizontal: 12, paddingVertical: 5,
+    backgroundColor: '#1B998B', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6,
   },
-  scheduleBadgeText: { fontSize: 13, fontWeight: '700', color: '#FFF' },
+  scheduleBadgeText: { fontSize: 14, fontWeight: '700', color: '#FFF' },
 
   // ── 연도 구분자
   yearSep: {
     flexDirection: 'row', alignItems: 'center',
     marginVertical: 8, paddingHorizontal: 4,
   },
-  yearSepLine: { flex: 1, height: 1, backgroundColor: '#C5CAE9' },
+  yearSepLine: { flex: 1, height: 1, backgroundColor: '#C5E8E2' },
   yearSepText: {
-    fontSize: 13, fontWeight: '700', color: '#5C6BC0',
+    fontSize: 14, fontWeight: '700', color: '#1B998B',
     marginHorizontal: 10,
-    backgroundColor: '#EEF0FB',
-    paddingHorizontal: 12, paddingVertical: 4,
-    borderRadius: 10,
+    backgroundColor: '#E3F7F4',
+    paddingHorizontal: 12, paddingVertical: 4, borderRadius: 10,
   },
 
   // ── 회차 카드
   scheduleCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: '#FFF', borderRadius: 14, padding: 16, marginBottom: 8,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   scheduleCardLast:  { borderWidth: 1.5, borderColor: '#A5D6A7' },
   scheduleCardGrace: { backgroundColor: '#FFFDE7' },
 
   graceBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#FFA726',
-    borderRadius: 6, paddingHorizontal: 9, paddingVertical: 3,
-    marginBottom: 10,
+    alignSelf: 'flex-start', backgroundColor: '#FFA726',
+    borderRadius: 6, paddingHorizontal: 9, paddingVertical: 3, marginBottom: 10,
   },
-  graceBadgeText: { fontSize: 12, fontWeight: '700', color: '#FFF' },
+  graceBadgeText: { fontSize: 13, fontWeight: '700', color: '#FFF' },
 
-  scheduleTop:    { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  scheduleTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
 
   scheduleMonthBadge: {
-    width: 52, height: 52,
-    backgroundColor: '#EEF0FB',
-    borderRadius: 13,
-    alignItems: 'center', justifyContent: 'center',
-    marginRight: 14,
+    width: 54, height: 54, backgroundColor: '#E3F7F4',
+    borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 14,
   },
   scheduleMonthBadgeGrace: { backgroundColor: '#FFF3E0' },
-  scheduleMonthText:  { fontSize: 18, fontWeight: '800', color: '#3F51B5', lineHeight: 20 },
-  scheduleMonthTextGrace: { color: '#F57C00' },
-  scheduleMonthLabel: { fontSize: 12, color: '#7986CB' },
+  scheduleMonthText:       { fontSize: 19, fontWeight: '800', color: '#1B998B', lineHeight: 22 },
+  scheduleMonthTextGrace:  { color: '#F57C00' },
+  scheduleMonthLabel:      { fontSize: 13, color: '#98BDB5' },
 
-  scheduleAmounts:    { flex: 1, gap: 7 },
-  scheduleAmountRow:  { flexDirection: 'row', alignItems: 'center' },
+  scheduleAmounts:   { flex: 1, gap: 7 },
+  scheduleAmountRow: { flexDirection: 'row', alignItems: 'center' },
   scheduleDot: {
-    width: 8, height: 8, borderRadius: 4,
-    backgroundColor: '#5C6BC0', marginRight: 8,
+    width: 8, height: 8, borderRadius: 4, backgroundColor: '#1B998B', marginRight: 8,
   },
   scheduleAmountLabel: { fontSize: 14, color: '#9E9E9E', flex: 1 },
-  scheduleAmountValue: { fontSize: 15, fontWeight: '700', color: '#1A237E' },
+  scheduleAmountValue: { fontSize: 15, fontWeight: '700', color: '#1A2E28' },
 
   scheduleBottom: { gap: 7 },
   progressBarBg: {
-    height: 7, backgroundColor: '#E8EAF6',
-    borderRadius: 4, overflow: 'hidden',
+    height: 7, backgroundColor: '#E3F7F4', borderRadius: 4, overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%', backgroundColor: '#3F51B5', borderRadius: 4,

@@ -10,7 +10,7 @@ import {
 } from '../utils/loanCalculator';
 import AdBanner from '../components/AdBanner';
 
-const PRIMARY = '#3F51B5';
+const PRIMARY = '#1B998B';
 
 const LOAN_TYPES = [
   { value: 'annuity',        label: '원리금균등' },
@@ -343,7 +343,7 @@ function OptionCard({ title, icon, color, bg, items }) {
  *  스타일
  * ───────────────────────────────────── */
 const s = StyleSheet.create({
-  safe:      { flex: 1, backgroundColor: '#F0F4FF' },
+  safe:      { flex: 1, backgroundColor: '#F4FAF8' },
   container: { padding: 20, paddingBottom: 48 },
 
   card: {
@@ -356,68 +356,68 @@ const s = StyleSheet.create({
     paddingHorizontal: 18, paddingTop: 16, paddingBottom: 12,
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
-  accent:    { width: 4, height: 18, backgroundColor: PRIMARY, borderRadius: 2, marginRight: 10 },
-  cardTitle: { fontSize: 17, fontWeight: '700', color: '#1A237E' },
+  accent:    { width: 4, height: 20, backgroundColor: PRIMARY, borderRadius: 2, marginRight: 10 },
+  cardTitle: { fontSize: 18, fontWeight: '700', color: '#1A2E28' },
   cardBody:  { padding: 18, gap: 14 },
 
-  label: { fontSize: 14, fontWeight: '600', color: '#424242', marginBottom: 8 },
+  label: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 8 },
   input: {
-    borderWidth: 1.5, borderColor: '#C5CAE9', borderRadius: 12,
-    paddingHorizontal: 16, paddingVertical: 12,
-    fontSize: 16, color: '#212121', backgroundColor: '#FAFBFF',
+    borderWidth: 1.5, borderColor: '#C5E8E2', borderRadius: 12,
+    paddingHorizontal: 16, paddingVertical: 13,
+    fontSize: 17, color: '#1A2E28', backgroundColor: '#F8FFFE',
   },
 
   typeRow: { flexDirection: 'row', gap: 8 },
   typeBtn: {
-    flex: 1, paddingVertical: 10, borderRadius: 10,
-    borderWidth: 1.5, borderColor: '#C5CAE9', alignItems: 'center', backgroundColor: '#FAFBFF',
+    flex: 1, paddingVertical: 12, borderRadius: 10,
+    borderWidth: 1.5, borderColor: '#C5E8E2', alignItems: 'center', backgroundColor: '#F8FFFE',
   },
-  typeBtnActive:    { backgroundColor: PRIMARY, borderColor: PRIMARY },
-  typeBtnText:      { fontSize: 13, fontWeight: '600', color: '#757575' },
+  typeBtnActive:     { backgroundColor: PRIMARY, borderColor: PRIMARY },
+  typeBtnText:       { fontSize: 15, fontWeight: '600', color: '#557668' },
   typeBtnTextActive: { color: '#FFF' },
 
   quickRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  quickBtn: { paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#EEF0FB', borderRadius: 10 },
-  quickBtnText: { fontSize: 14, fontWeight: '600', color: PRIMARY },
+  quickBtn: { paddingHorizontal: 14, paddingVertical: 9, backgroundColor: '#E3F7F4', borderRadius: 10 },
+  quickBtnText: { fontSize: 15, fontWeight: '600', color: PRIMARY },
 
   calcBtn: {
-    backgroundColor: PRIMARY, borderRadius: 16, paddingVertical: 18,
+    backgroundColor: '#FF6B35', borderRadius: 16, paddingVertical: 19,
     alignItems: 'center', marginBottom: 20,
-    shadowColor: PRIMARY, shadowOffset: { width: 0, height: 4 },
+    shadowColor: '#FF6B35', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 8, elevation: 6,
   },
-  calcBtnText: { fontSize: 18, fontWeight: '700', color: '#FFF' },
+  calcBtnText: { fontSize: 20, fontWeight: '700', color: '#FFF' },
 
   summaryRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  summaryLabel:     { fontSize: 15, color: '#616161' },
-  summaryValue:     { fontSize: 15, fontWeight: '600', color: '#212121' },
-  summaryValueBold: { fontSize: 18, fontWeight: '800', color: '#1A237E' },
+  summaryLabel:     { fontSize: 16, color: '#557668' },
+  summaryValue:     { fontSize: 16, fontWeight: '600', color: '#1A2E28' },
+  summaryValueBold: { fontSize: 19, fontWeight: '800', color: PRIMARY },
   divider:          { height: 1, backgroundColor: '#EEEEEE', marginVertical: 4 },
 
-  optionTitle: { fontSize: 17, fontWeight: '700', color: '#1A237E', marginBottom: 10 },
+  optionTitle: { fontSize: 18, fontWeight: '700', color: '#1A2E28', marginBottom: 10 },
   optionCard:  { borderRadius: 16, marginBottom: 14, borderWidth: 1.5, overflow: 'hidden' },
   optionCardHeader: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    padding: 14, borderBottomWidth: 1,
+    padding: 16, borderBottomWidth: 1,
   },
-  optionCardIcon:  { fontSize: 24 },
-  optionCardTitle: { fontSize: 17, fontWeight: '700' },
-  optionRow:       { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 11 },
-  optionLabel:     { fontSize: 14, color: '#424242' },
-  optionValue:     { fontSize: 14, fontWeight: '600', color: '#212121' },
+  optionCardIcon:  { fontSize: 26 },
+  optionCardTitle: { fontSize: 18, fontWeight: '700' },
+  optionRow:       { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 13 },
+  optionLabel:     { fontSize: 15, color: '#555' },
+  optionValue:     { fontSize: 15, fontWeight: '600', color: '#1A2E28' },
 
   tipCard: {
-    backgroundColor: '#FFF9C4', borderRadius: 14, padding: 16,
+    backgroundColor: '#FFFBEB', borderRadius: 14, padding: 18,
     marginBottom: 14, borderWidth: 1, borderColor: '#F9A825',
   },
-  tipTitle: { fontSize: 15, fontWeight: '700', color: '#F57F17', marginBottom: 8 },
-  tipText:  { fontSize: 14, color: '#5D4037', lineHeight: 22 },
+  tipTitle: { fontSize: 17, fontWeight: '700', color: '#E65100', marginBottom: 10 },
+  tipText:  { fontSize: 15, color: '#4E342E', lineHeight: 24 },
 
   fullRepaidCard: {
     alignItems: 'center', padding: 32, borderRadius: 18,
     backgroundColor: '#E8F5E9', borderWidth: 1.5, borderColor: '#4CAF50', marginBottom: 14,
   },
-  fullRepaidIcon:  { fontSize: 48, marginBottom: 12 },
-  fullRepaidTitle: { fontSize: 22, fontWeight: '800', color: '#1B5E20', marginBottom: 8 },
-  fullRepaidDesc:  { fontSize: 16, color: '#2E7D32', textAlign: 'center', lineHeight: 24 },
+  fullRepaidIcon:  { fontSize: 52, marginBottom: 12 },
+  fullRepaidTitle: { fontSize: 24, fontWeight: '800', color: '#1B5E20', marginBottom: 8 },
+  fullRepaidDesc:  { fontSize: 17, color: '#2E7D32', textAlign: 'center', lineHeight: 26 },
 });

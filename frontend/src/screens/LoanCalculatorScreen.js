@@ -400,11 +400,11 @@ function LoanInputGroup({ data, onChange }) {
 /*  스타일                               */
 /* ──────────────────────────────────── */
 const styles = StyleSheet.create({
-  safe:      { flex: 1, backgroundColor: '#F0F4FF' },
+  safe:      { flex: 1, backgroundColor: '#F4FAF8' },
   container: { padding: 20, paddingBottom: 40 },
 
   sectionLabel: {
-    fontSize: 15, fontWeight: '700', color: '#3F51B5',
+    fontSize: 17, fontWeight: '700', color: '#1B998B',
     marginBottom: 8, marginTop: 4,
   },
 
@@ -418,49 +418,26 @@ const styles = StyleSheet.create({
   // ── 대출 방식 선택 (2×2 세그먼트) ──
   typeSection: { padding: 16, paddingBottom: 12 },
   typeSectionLabel: {
-    fontSize: 15, fontWeight: '600', color: '#757575', marginBottom: 10,
+    fontSize: 17, fontWeight: '600', color: '#557668', marginBottom: 10,
   },
 
-  // 세그먼트 컨테이너 (테두리 + overflow hidden으로 깔끔하게)
   typeSegmentWrap: {
-    borderWidth: 1,
-    borderColor: '#C5CAE9',
-    borderRadius: 12,
-    overflow: 'hidden',
+    borderWidth: 1, borderColor: '#C5E8E2', borderRadius: 12, overflow: 'hidden',
   },
-  typeSegmentRow: {
-    flexDirection: 'row',
-  },
+  typeSegmentRow: { flexDirection: 'row' },
   typeSegmentBtn: {
-    flex: 1,
-    paddingVertical: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8F9FF',
+    flex: 1, paddingVertical: 16,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#F0FDF9',
   },
-  typeSegmentBtnActive: {
-    backgroundColor: '#3F51B5',
-  },
-  typeSegmentBorderRight: {
-    borderRightWidth: 1,
-    borderRightColor: '#C5CAE9',
-  },
-  typeSegmentBorderBottom: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#C5CAE9',
-  },
-  typeSegmentText: {
-    fontSize: 15, fontWeight: '700', color: '#5C6BC0',
-  },
-  typeSegmentTextActive: {
-    color: '#FFF',
-  },
+  typeSegmentBtnActive:    { backgroundColor: '#1B998B' },
+  typeSegmentBorderRight:  { borderRightWidth: 1,  borderRightColor:  '#C5E8E2' },
+  typeSegmentBorderBottom: { borderBottomWidth: 1, borderBottomColor: '#C5E8E2' },
+  typeSegmentText:         { fontSize: 16, fontWeight: '700', color: '#557668' },
+  typeSegmentTextActive:   { color: '#FFF' },
 
-  typeDescBox: {
-    marginTop: 12, backgroundColor: '#F5F6FF', borderRadius: 12,
-    padding: 13,
-  },
-  typeDescText: { fontSize: 14, color: '#5C6BC0', lineHeight: 21 },
+  typeDescBox:  { marginTop: 12, backgroundColor: '#F0FDF9', borderRadius: 12, padding: 14 },
+  typeDescText: { fontSize: 16, color: '#557668', lineHeight: 25 },
 
   // ── 입력 공통 ──
   inputRow: {
@@ -468,40 +445,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18, paddingVertical: 17,
   },
   inputDivider: { height: 1, backgroundColor: '#F5F5F5' },
-  inputLabel:   { flex: 1, fontSize: 17, color: '#424242', fontWeight: '500' },
+  inputLabel:   { flex: 1, fontSize: 17, color: '#333', fontWeight: '500' },
   inputRight:   { flexDirection: 'row', alignItems: 'center' },
   input: {
     minWidth: 120, textAlign: 'right',
-    fontSize: 18, color: '#1A237E', fontWeight: '600', paddingVertical: 0,
+    fontSize: 18, color: '#1A2E28', fontWeight: '600', paddingVertical: 0,
   },
   inputUnit: { fontSize: 16, color: '#9E9E9E', marginLeft: 8, width: 30 },
 
   principalHintRow: { paddingHorizontal: 18, paddingBottom: 10, marginTop: -4 },
-  principalHint:    { fontSize: 14, color: '#7986CB', fontWeight: '600' },
+  principalHint:    { fontSize: 15, color: '#557668', fontWeight: '600' },
 
   quickRow: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 8,
     paddingHorizontal: 18, paddingBottom: 16,
   },
   quickBtn: {
-    backgroundColor: '#EEF0FB', borderRadius: 20,
-    paddingHorizontal: 14, paddingVertical: 8,
+    backgroundColor: '#E3F7F4', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9,
   },
-  quickBtnText:      { fontSize: 14, color: '#3F51B5', fontWeight: '700' },
+  quickBtnText:      { fontSize: 15, color: '#1B998B', fontWeight: '700' },
   quickBtnClear: {
-    backgroundColor: '#FFF3E0', borderRadius: 20,
-    paddingHorizontal: 14, paddingVertical: 8,
+    backgroundColor: '#FFF3E0', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9,
   },
-  quickBtnClearText: { fontSize: 14, color: '#F57C00', fontWeight: '700' },
+  quickBtnClearText: { fontSize: 15, color: '#F57C00', fontWeight: '700' },
 
   // ── 거치기간 빠른 선택 ──
   graceBtn: {
-    paddingHorizontal: 14, paddingVertical: 8,
-    borderRadius: 20, borderWidth: 1.5, borderColor: '#C5CAE9',
-    backgroundColor: '#FFF',
+    paddingHorizontal: 14, paddingVertical: 9,
+    borderRadius: 20, borderWidth: 1.5, borderColor: '#C5E8E2', backgroundColor: '#FFF',
   },
-  graceBtnActive:    { backgroundColor: '#3F51B5', borderColor: '#3F51B5' },
-  graceBtnText:      { fontSize: 14, color: '#5C6BC0', fontWeight: '600' },
+  graceBtnActive:    { backgroundColor: '#1B998B', borderColor: '#1B998B' },
+  graceBtnText:      { fontSize: 15, color: '#557668', fontWeight: '600' },
   graceBtnTextActive:{ color: '#FFF' },
 
   // ── 하단 ──
@@ -511,14 +485,14 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
-  toggleLabel: { fontSize: 17, fontWeight: '600', color: '#1A237E' },
-  toggleDesc:  { fontSize: 14, color: '#9E9E9E', marginTop: 3 },
+  toggleLabel: { fontSize: 18, fontWeight: '600', color: '#1A2E28' },
+  toggleDesc:  { fontSize: 15, color: '#9E9E9E', marginTop: 3 },
 
   calcBtn: {
-    backgroundColor: '#3F51B5', borderRadius: 16, padding: 20,
+    backgroundColor: '#FF6B35', borderRadius: 16, padding: 20,
     alignItems: 'center', marginTop: 4,
-    shadowColor: '#3F51B5', shadowOffset: { width: 0, height: 4 },
+    shadowColor: '#FF6B35', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35, shadowRadius: 8, elevation: 6,
   },
-  calcBtnText: { color: '#FFF', fontSize: 19, fontWeight: '700', letterSpacing: 0.3 },
+  calcBtnText: { color: '#FFF', fontSize: 20, fontWeight: '700', letterSpacing: 0.3 },
 });

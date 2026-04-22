@@ -17,7 +17,7 @@ const TYPE_LABEL = {
 };
 
 const TYPE_COLOR = {
-  annuity:        '#3F51B5',
+  annuity:        '#1B998B',
   equalPrincipal: '#00897B',
   bullet:         '#E53935',
   graduated:      '#7B1FA2',
@@ -97,7 +97,7 @@ export default function HistoryScreen({ navigation }) {
     return (
       <SafeAreaView style={styles.safe} edges={['bottom']}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#3F51B5" />
+          <ActivityIndicator size="large" color="#1B998B" />
           <Text style={styles.loadingText}>기록 불러오는 중...</Text>
         </View>
       </SafeAreaView>
@@ -115,8 +115,8 @@ export default function HistoryScreen({ navigation }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#3F51B5"
-            colors={['#3F51B5']}
+            tintColor="#1B998B"
+            colors={['#1B998B']}
           />
         }
         ListEmptyComponent={
@@ -151,7 +151,7 @@ function HistoryCard({ item, onPress, onDelete }) {
 
   const loanType  = item.loanType || 'annuity';
   const typeLabel = TYPE_LABEL[loanType] || loanType;
-  const typeColor = TYPE_COLOR[loanType] || '#3F51B5';
+  const typeColor = TYPE_COLOR[loanType] || '#1B998B';
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
@@ -212,77 +212,55 @@ function StatCell({ label, value, color }) {
 /*  스타일                                 */
 /* ─────────────────────────────────────── */
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F0F4FF' },
-  list: { padding: 16, paddingBottom: 40 },
+  safe:   { flex: 1, backgroundColor: '#F4FAF8' },
+  list:   { padding: 16, paddingBottom: 40 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
 
-  loadingText: { fontSize: 16, color: '#757575', marginTop: 12 },
+  loadingText: { fontSize: 17, color: '#557668', marginTop: 12 },
 
   card: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
-    elevation: 3,
+    backgroundColor: '#FFF', borderRadius: 16, padding: 18, marginBottom: 14,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07, shadowRadius: 6, elevation: 3,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  cardAmount: { fontSize: 20, fontWeight: '800', color: '#1A237E' },
-  cardDate:   { fontSize: 13, color: '#9E9E9E', marginTop: 3 },
+  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
+  cardAmount:  { fontSize: 22, fontWeight: '800', color: '#1A2E28' },
+  cardDate:    { fontSize: 14, color: '#9E9E9E', marginTop: 3 },
 
   deleteBtn: {
-    backgroundColor: '#FFF0F0',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: '#FFCDD2',
+    backgroundColor: '#FFF0F0', borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 7,
+    borderWidth: 1, borderColor: '#FFCDD2',
   },
-  deleteBtnText: { fontSize: 14, color: '#E53935', fontWeight: '600' },
+  deleteBtnText: { fontSize: 15, color: '#E53935', fontWeight: '600' },
 
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginBottom: 14 },
 
-  typeChip: {
-    borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5,
-    borderWidth: 1,
-  },
-  typeChipText: { fontSize: 13, fontWeight: '700' },
+  typeChip: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1 },
+  typeChipText: { fontSize: 14, fontWeight: '700' },
 
   chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EEF0FB',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#E3F7F4', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
   },
-  chipIcon:  { fontSize: 13, marginRight: 5 },
-  chipLabel: { fontSize: 13, color: '#3F51B5', fontWeight: '600' },
+  chipIcon:  { fontSize: 14, marginRight: 5 },
+  chipLabel: { fontSize: 14, color: '#1B998B', fontWeight: '600' },
 
   statRow: {
-    flexDirection: 'row',
-    backgroundColor: '#F8F9FF',
-    borderRadius: 12,
-    padding: 14,
+    flexDirection: 'row', backgroundColor: '#F0FDF9',
+    borderRadius: 12, padding: 14,
   },
   statCell:    { flex: 1, alignItems: 'center' },
-  statDivider: { width: 1, backgroundColor: '#E0E0E0', marginHorizontal: 4 },
-  statLabel:   { fontSize: 12, color: '#9E9E9E', marginBottom: 5 },
-  statValue:   { fontSize: 14, fontWeight: '700', color: '#1A237E' },
+  statDivider: { width: 1, backgroundColor: '#C5E8E2', marginHorizontal: 4 },
+  statLabel:   { fontSize: 13, color: '#98BDB5', marginBottom: 5 },
+  statValue:   { fontSize: 15, fontWeight: '700', color: '#1A2E28' },
 
-  reloadHint: { fontSize: 13, color: '#BDBDBD', textAlign: 'right', marginTop: 12 },
+  reloadHint: { fontSize: 14, color: '#BDBDBD', textAlign: 'right', marginTop: 12 },
 
   emptyContainer: { alignItems: 'center', paddingTop: 80 },
-  emptyIcon:  { fontSize: 60, marginBottom: 18 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#1A237E', marginBottom: 10 },
-  emptyDesc:  { fontSize: 16, color: '#9E9E9E', textAlign: 'center', marginBottom: 28, lineHeight: 24 },
-  calcNavBtn: { backgroundColor: '#3F51B5', borderRadius: 14, paddingHorizontal: 30, paddingVertical: 16 },
-  calcNavBtnText: { color: '#FFF', fontSize: 17, fontWeight: '700' },
+  emptyIcon:  { fontSize: 64, marginBottom: 18 },
+  emptyTitle: { fontSize: 22, fontWeight: '700', color: '#1A2E28', marginBottom: 10 },
+  emptyDesc:  { fontSize: 17, color: '#9E9E9E', textAlign: 'center', marginBottom: 28, lineHeight: 26 },
+  calcNavBtn: { backgroundColor: '#1B998B', borderRadius: 14, paddingHorizontal: 30, paddingVertical: 16 },
+  calcNavBtnText: { color: '#FFF', fontSize: 18, fontWeight: '700' },
 });

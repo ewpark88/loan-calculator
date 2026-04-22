@@ -10,7 +10,7 @@ import {
 } from '../utils/loanCalculator';
 import AdBanner from '../components/AdBanner';
 
-const PRIMARY = '#3F51B5';
+const PRIMARY = '#1B998B';
 
 const ZONES = [
   { value: 'restricted', label: '투기과열지구', desc: '강남·용산 등 — LTV 최대 40%' },
@@ -377,7 +377,7 @@ function ResultRow({ label, value, bold }) {
  *  스타일
  * ───────────────────────────────────── */
 const s = StyleSheet.create({
-  safe:      { flex: 1, backgroundColor: '#F0F4FF' },
+  safe:      { flex: 1, backgroundColor: '#F4FAF8' },
   container: { padding: 20, paddingBottom: 48 },
 
   card: {
@@ -390,83 +390,83 @@ const s = StyleSheet.create({
     paddingHorizontal: 18, paddingTop: 16, paddingBottom: 12,
     borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
   },
-  accent:    { width: 4, height: 18, backgroundColor: PRIMARY, borderRadius: 2, marginRight: 10 },
-  cardTitle: { fontSize: 17, fontWeight: '700', color: '#1A237E' },
+  accent:    { width: 4, height: 20, backgroundColor: PRIMARY, borderRadius: 2, marginRight: 10 },
+  cardTitle: { fontSize: 18, fontWeight: '700', color: '#1A2E28' },
   cardBody:  { padding: 18, gap: 14 },
 
-  label: { fontSize: 14, fontWeight: '600', color: '#424242', marginBottom: 8 },
+  label: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 8 },
   input: {
-    borderWidth: 1.5, borderColor: '#C5CAE9', borderRadius: 12,
-    paddingHorizontal: 16, paddingVertical: 12,
-    fontSize: 16, color: '#212121', backgroundColor: '#FAFBFF',
+    borderWidth: 1.5, borderColor: '#C5E8E2', borderRadius: 12,
+    paddingHorizontal: 16, paddingVertical: 13,
+    fontSize: 17, color: '#1A2E28', backgroundColor: '#F8FFFE',
   },
 
   quickRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
-  quickBtn: { paddingHorizontal: 14, paddingVertical: 8, backgroundColor: '#EEF0FB', borderRadius: 10 },
-  quickBtnText: { fontSize: 14, fontWeight: '600', color: PRIMARY },
+  quickBtn: { paddingHorizontal: 14, paddingVertical: 9, backgroundColor: '#E3F7F4', borderRadius: 10 },
+  quickBtnText: { fontSize: 15, fontWeight: '600', color: PRIMARY },
 
   radioRow: {
-    flexDirection: 'row', alignItems: 'center', padding: 12,
+    flexDirection: 'row', alignItems: 'center', padding: 14,
     borderRadius: 12, borderWidth: 1.5, borderColor: '#E0E0E0',
     marginBottom: 8, backgroundColor: '#FAFAFA',
   },
-  radioRowActive:    { borderColor: PRIMARY, backgroundColor: '#EEF0FB' },
+  radioRowActive:    { borderColor: PRIMARY, backgroundColor: '#E3F7F4' },
   radioCircle: {
-    width: 20, height: 20, borderRadius: 10, borderWidth: 2,
+    width: 22, height: 22, borderRadius: 11, borderWidth: 2,
     borderColor: '#BDBDBD', alignItems: 'center', justifyContent: 'center', marginRight: 12,
   },
   radioCircleActive: { borderColor: PRIMARY },
-  radioDot:          { width: 10, height: 10, borderRadius: 5, backgroundColor: PRIMARY },
-  radioLabel:        { fontSize: 15, fontWeight: '600', color: '#424242' },
+  radioDot:          { width: 11, height: 11, borderRadius: 6, backgroundColor: PRIMARY },
+  radioLabel:        { fontSize: 16, fontWeight: '600', color: '#333' },
   radioLabelActive:  { color: PRIMARY },
-  radioDesc:         { fontSize: 13, color: '#9E9E9E', marginTop: 2 },
+  radioDesc:         { fontSize: 14, color: '#9E9E9E', marginTop: 2 },
 
   segRow: { flexDirection: 'row', gap: 8 },
   segBtn: {
-    flex: 1, paddingVertical: 10, borderRadius: 10,
-    borderWidth: 1.5, borderColor: '#C5CAE9', alignItems: 'center', backgroundColor: '#FAFBFF',
+    flex: 1, paddingVertical: 12, borderRadius: 10,
+    borderWidth: 1.5, borderColor: '#C5E8E2', alignItems: 'center', backgroundColor: '#F8FFFE',
   },
-  segBtnActive:    { backgroundColor: PRIMARY, borderColor: PRIMARY },
-  segBtnText:      { fontSize: 13, fontWeight: '600', color: '#757575' },
+  segBtnActive:     { backgroundColor: PRIMARY, borderColor: PRIMARY },
+  segBtnText:       { fontSize: 15, fontWeight: '600', color: '#557668' },
   segBtnTextActive: { color: '#FFF' },
 
   hintBox: {
-    backgroundColor: '#F3F4FF', borderRadius: 10, padding: 12,
+    backgroundColor: '#F0FDF9', borderRadius: 10, padding: 14,
     borderLeftWidth: 3, borderLeftColor: PRIMARY, marginTop: 8,
   },
-  hintText: { fontSize: 13, color: '#3F51B5', lineHeight: 20 },
+  hintText: { fontSize: 14, color: PRIMARY, lineHeight: 22 },
 
   calcBtn: {
-    backgroundColor: PRIMARY, borderRadius: 16, paddingVertical: 18,
+    backgroundColor: '#FF6B35', borderRadius: 16, paddingVertical: 19,
     alignItems: 'center', marginBottom: 20,
-    shadowColor: PRIMARY, shadowOffset: { width: 0, height: 4 },
+    shadowColor: '#FF6B35', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 8, elevation: 6,
   },
-  calcBtnText: { fontSize: 18, fontWeight: '700', color: '#FFF' },
+  calcBtnText: { fontSize: 20, fontWeight: '700', color: '#FFF' },
 
   alertCard:  { borderWidth: 2, borderColor: '#FF9800' },
   alertBody:  { alignItems: 'center', padding: 32 },
-  alertIcon:  { fontSize: 40, marginBottom: 12 },
-  alertTitle: { fontSize: 20, fontWeight: '800', color: '#E65100', marginBottom: 8 },
-  alertDesc:  { fontSize: 15, color: '#BF360C', textAlign: 'center', lineHeight: 24 },
+  alertIcon:  { fontSize: 44, marginBottom: 12 },
+  alertTitle: { fontSize: 22, fontWeight: '800', color: '#E65100', marginBottom: 8 },
+  alertDesc:  { fontSize: 16, color: '#BF360C', textAlign: 'center', lineHeight: 26 },
 
   maxLoanBox:     { alignItems: 'center', paddingVertical: 24 },
-  maxLoanLabel:   { fontSize: 15, color: '#757575', marginBottom: 8 },
-  maxLoanValue:   { fontSize: 36, fontWeight: '800', color: '#1A237E' },
+  maxLoanLabel:   { fontSize: 16, color: '#557668', marginBottom: 8 },
+  maxLoanValue:   { fontSize: 38, fontWeight: '800', color: '#1A2E28' },
   maxLoanSub:     { fontSize: 16, color: '#9E9E9E', marginTop: 4 },
-  limitBadge:     { marginTop: 12, paddingHorizontal: 16, paddingVertical: 6, backgroundColor: '#EEF0FB', borderRadius: 20 },
-  limitBadgeText: { fontSize: 13, fontWeight: '600', color: PRIMARY },
+  limitBadge:     { marginTop: 12, paddingHorizontal: 16, paddingVertical: 7, backgroundColor: '#E3F7F4', borderRadius: 20 },
+  limitBadgeText: { fontSize: 14, fontWeight: '600', color: PRIMARY },
 
   limitRow: {
     flexDirection: 'row', alignItems: 'center',
-    padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#E0E0E0',
+    padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#C5E8E2',
   },
-  activeDot:        { width: 8, height: 8, borderRadius: 4 },
-  limitLabel:       { fontSize: 15, fontWeight: '600', color: '#424242' },
-  limitSub:         { fontSize: 13, color: '#9E9E9E', marginTop: 2 },
-  limitValue:       { fontSize: 18, fontWeight: '700', color: '#212121' },
-  activeBadge:      { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
-  activeBadgeText:  { fontSize: 11, fontWeight: '700', color: '#FFF' },
+  activeDot:        { width: 9, height: 9, borderRadius: 5 },
+  limitLabel:       { fontSize: 16, fontWeight: '600', color: '#333' },
+  limitSub:         { fontSize: 14, color: '#9E9E9E', marginTop: 2 },
+  limitValue:       { fontSize: 19, fontWeight: '700', color: '#1A2E28' },
+  activeBadge:      { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 8 },
+  activeBadgeText:  { fontSize: 13, fontWeight: '700', color: '#FFF' },
 
   resultRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
