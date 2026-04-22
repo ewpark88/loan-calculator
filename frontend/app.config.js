@@ -1,4 +1,5 @@
-const includeAds = process.env.INCLUDE_ADS === 'true';
+// android/ 디렉토리가 이미 존재(bare workflow)하므로 플러그인 불필요
+const includeAds = false;
 
 module.exports = {
   expo: {
