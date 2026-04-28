@@ -91,8 +91,16 @@ export default function LoanCalculatorScreen({ navigation, route }) {
     const y = Number(period);
     const g = Number(gracePeriod || 0);
 
-    if (p <= 0 || r < 0 || y <= 0) {
-      Alert.alert('입력 오류', `${label}에 올바른 값을 입력해주세요.`);
+    if (isNaN(p) || p <= 0) {
+      Alert.alert('입력 오류', '대출 금액을 올바르게 입력해주세요.');
+      return null;
+    }
+    if (isNaN(r) || r < 0) {
+      Alert.alert('입력 오류', '이자율을 올바르게 입력해주세요.');
+      return null;
+    }
+    if (isNaN(y) || y <= 0) {
+      Alert.alert('입력 오류', '대출 기간을 올바르게 입력해주세요.');
       return null;
     }
     if (r > 100) {
@@ -103,7 +111,7 @@ export default function LoanCalculatorScreen({ navigation, route }) {
       Alert.alert('입력 오류', '대출 기간은 50년 이하로 입력해주세요.');
       return null;
     }
-    if (!Number.isInteger(g) || g < 0) {
+    if (isNaN(g) || !Number.isInteger(g) || g < 0) {
       Alert.alert('입력 오류', '거치기간은 0 이상의 정수(년)를 입력해주세요.');
       return null;
     }

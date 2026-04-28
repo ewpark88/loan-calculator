@@ -1,42 +1,72 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, FlatList,
   TouchableOpacity, ActivityIndicator, RefreshControl, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { getLocalHistory, deleteLocalHistory } from '../services/localHistory';
-import { formatKRW, formatManWon } from '../utils/loanCalculator';
+import { getAllHistory, deleteLocalHistory, deleteBrokerageHistory, deleteAcquisitionTaxHistory } from '../services/localHistory';
+import { formatKRW, formatManWon, formatNumber } from '../utils/loanCalculator';
 import AdBanner from '../components/AdBanner';
 
-const TYPE_LABEL = {
+const LOAN_TYPE_LABEL = {
   annuity:        '원리금균등',
   equalPrincipal: '원금균등',
   bullet:         '만기일시',
   graduated:      '체증식',
 };
 
-const TYPE_COLOR = {
+const LOAN_TYPE_COLOR = {
   annuity:        '#1B998B',
   equalPrincipal: '#00897B',
   bullet:         '#E53935',
   graduated:      '#7B1FA2',
 };
 
+const TX_LABEL = {
+  sale:    '매매',
+  jeonse:  '전세',
+  monthly: '월세',
+};
+
+const PROP_LABEL = {
+  house:     '주택',
+  officetel: '오피스텔',
+  presale:   '분양권',
+  other:     '그 외',
+};
+
+const ACQ_TYPE_LABEL = { sale: '매매', gift: '증여', inheritance: '상속', original: '원시취득' };
+const ACQ_PROP_LABEL = { house: '주택', officetel: '오피스텔', farmland: '농지', other: '그 외' };
+const ACQ_AREA_LABEL = { '40': '40㎡↓', '60': '60㎡↓', '85': '85㎡↓', '85plus': '85㎡↑' };
+
+const FILTER_TABS = [
+  { key: 'all',         label: '전체' },
+  { key: 'loan',        label: '대출계산' },
+  { key: 'brokerage',   label: '중개보수' },
+  { key: 'acquisition', label: '취득세' },
+];
+
 export default function HistoryScreen({ navigation }) {
   const [history, setHistory]       = useState([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter]         = useState('all');
 
   const loadHistory = useCallback(async () => {
     try {
-      const data = await getLocalHistory();
+      const data = await getAllHistory();
       setHistory(data);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
+
+  const filteredHistory = useMemo(() => {
+    if (filter === 'all') return history;
+    return history.filter(item => item.recordType === filter);
+  }, [history, filter]);
 
   useFocusEffect(
     useCallback(() => {
@@ -50,7 +80,7 @@ export default function HistoryScreen({ navigation }) {
     loadHistory();
   }
 
-  function handleItemPress(item) {
+  function handleLoanPress(item) {
     navigation.navigate('LoanCalculator', {
       initialValues: {
         principal:    item.principal,
@@ -71,7 +101,13 @@ export default function HistoryScreen({ navigation }) {
         {
           text: '삭제', style: 'destructive',
           onPress: async () => {
-            await deleteLocalHistory(item.id);
+            if (item.recordType === 'brokerage') {
+              await deleteBrokerageHistory(item.id);
+            } else if (item.recordType === 'acquisition') {
+              await deleteAcquisitionTaxHistory(item.id);
+            } else {
+              await deleteLocalHistory(item.id);
+            }
             loadHistory();
           },
         },
@@ -81,14 +117,18 @@ export default function HistoryScreen({ navigation }) {
 
   function renderItem({ item, index }) {
     const showAd = index > 0 && index % 3 === 0;
+    let card;
+    if (item.recordType === 'brokerage') {
+      card = <BrokerageCard item={item} onDelete={() => handleDelete(item)} />;
+    } else if (item.recordType === 'acquisition') {
+      card = <AcquisitionTaxCard item={item} onDelete={() => handleDelete(item)} />;
+    } else {
+      card = <LoanCard item={item} onPress={() => handleLoanPress(item)} onDelete={() => handleDelete(item)} />;
+    }
     return (
       <>
         {showAd && <AdBanner style={{ marginBottom: 12 }} />}
-        <HistoryCard
-          item={item}
-          onPress={() => handleItemPress(item)}
-          onDelete={() => handleDelete(item)}
-        />
+        {card}
       </>
     );
   }
@@ -107,8 +147,8 @@ export default function HistoryScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <FlatList
-        data={history}
-        keyExtractor={item => String(item.id)}
+        data={filteredHistory}
+        keyExtractor={item => `${item.recordType || 'loan'}_${item.id}`}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
         refreshControl={
@@ -119,12 +159,34 @@ export default function HistoryScreen({ navigation }) {
             colors={['#1B998B']}
           />
         }
+        ListHeaderComponent={
+          <View style={styles.filterRow}>
+            {FILTER_TABS.map(tab => (
+              <TouchableOpacity
+                key={tab.key}
+                style={[styles.filterTab, filter === tab.key && styles.filterTabActive]}
+                onPress={() => setFilter(tab.key)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.filterTabTxt, filter === tab.key && styles.filterTabTxtActive]}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📭</Text>
             <Text style={styles.emptyTitle}>기록이 없습니다</Text>
             <Text style={styles.emptyDesc}>
-              대출을 계산하고 결과를 저장하면{'\n'}여기에 표시됩니다.
+              {filter === 'brokerage'
+                ? '중개보수를 계산하고 저장하면\n여기에 표시됩니다.'
+                : filter === 'loan'
+                ? '대출을 계산하고 결과를 저장하면\n여기에 표시됩니다.'
+                : filter === 'acquisition'
+                ? '취득세를 계산하고 저장하면\n여기에 표시됩니다.'
+                : '계산 결과를 저장하면\n여기에 표시됩니다.'}
             </Text>
             <TouchableOpacity
               style={styles.calcNavBtn}
@@ -140,9 +202,9 @@ export default function HistoryScreen({ navigation }) {
 }
 
 /* ─────────────────────────────────────── */
-/*  히스토리 카드                           */
+/*  대출 히스토리 카드                      */
 /* ─────────────────────────────────────── */
-function HistoryCard({ item, onPress, onDelete }) {
+function LoanCard({ item, onPress, onDelete }) {
   const date = item.createdAt
     ? new Date(item.createdAt).toLocaleDateString('ko-KR', {
         year: 'numeric', month: 'long', day: 'numeric',
@@ -150,15 +212,20 @@ function HistoryCard({ item, onPress, onDelete }) {
     : '-';
 
   const loanType  = item.loanType || 'annuity';
-  const typeLabel = TYPE_LABEL[loanType] || loanType;
-  const typeColor = TYPE_COLOR[loanType] || '#1B998B';
+  const typeLabel = LOAN_TYPE_LABEL[loanType] || loanType;
+  const typeColor = LOAN_TYPE_COLOR[loanType] || '#1B998B';
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
       {/* 헤더: 원금 + 날짜 + 삭제 */}
       <View style={styles.cardHeader}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardAmount}>{formatManWon(item.principal)}</Text>
+          <View style={styles.cardTitleRow}>
+            <View style={styles.recordTypeBadge}>
+              <Text style={styles.recordTypeBadgeTxt}>대출</Text>
+            </View>
+            <Text style={styles.cardAmount}>{formatManWon(item.principal)}</Text>
+          </View>
           <Text style={styles.cardDate}>{date}</Text>
         </View>
         <TouchableOpacity style={styles.deleteBtn} onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -190,6 +257,118 @@ function HistoryCard({ item, onPress, onDelete }) {
   );
 }
 
+/* ─────────────────────────────────────── */
+/*  중개보수 히스토리 카드                  */
+/* ─────────────────────────────────────── */
+function BrokerageCard({ item, onDelete }) {
+  const date = item.createdAt
+    ? new Date(item.createdAt).toLocaleDateString('ko-KR', {
+        year: 'numeric', month: 'long', day: 'numeric',
+      })
+    : '-';
+
+  const txLabel   = TX_LABEL[item.txType]   || item.txType   || '';
+  const propLabel = PROP_LABEL[item.propType] || item.propType || '';
+  const rateFrac  = Math.round((item.rate || 0) * 1000);
+
+  return (
+    <View style={styles.card}>
+      {/* 헤더 */}
+      <View style={styles.cardHeader}>
+        <View style={{ flex: 1 }}>
+          <View style={styles.cardTitleRow}>
+            <View style={[styles.recordTypeBadge, styles.recordTypeBadgeBrokerage]}>
+              <Text style={styles.recordTypeBadgeTxt}>중개</Text>
+            </View>
+            <Text style={styles.cardAmount}>{formatManWon(item.tradeAmount)}</Text>
+          </View>
+          <Text style={styles.cardDate}>{date}</Text>
+        </View>
+        <TouchableOpacity style={styles.deleteBtn} onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Text style={styles.deleteBtnText}>삭제</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 칩 */}
+      <View style={styles.chipRow}>
+        <View style={[styles.typeChip, { backgroundColor: '#FF6B3518', borderColor: '#FF6B3540' }]}>
+          <Text style={[styles.typeChipText, { color: '#FF6B35' }]}>{txLabel}</Text>
+        </View>
+        <Chip icon="🏠" label={propLabel} />
+        <Chip icon="📊" label={`${rateFrac}/1000`} />
+        {item.isLimited && <Chip icon="⚠️" label="한도적용" />}
+      </View>
+
+      {/* 결과 요약 */}
+      <View style={styles.statRow}>
+        <StatCell label="중개보수"     value={`${formatNumber(item.commission)}원`} />
+        <View style={styles.statDivider} />
+        <StatCell label="부가세"       value={`${formatNumber(item.vat)}원`} />
+        <View style={styles.statDivider} />
+        <StatCell label="합계(최대)"   value={`${formatNumber(item.total)}원`} />
+      </View>
+    </View>
+  );
+}
+
+/* ─────────────────────────────────────── */
+/*  취득세 히스토리 카드                    */
+/* ─────────────────────────────────────── */
+function AcquisitionTaxCard({ item, onDelete }) {
+  const date = item.createdAt
+    ? new Date(item.createdAt).toLocaleDateString('ko-KR', {
+        year: 'numeric', month: 'long', day: 'numeric',
+      })
+    : '-';
+
+  const acqLabel  = ACQ_TYPE_LABEL[item.acqType]  || item.acqType  || '';
+  const propLabel = ACQ_PROP_LABEL[item.propType] || item.propType || '';
+  const areaLabel = ACQ_AREA_LABEL[item.area]     || item.area     || '';
+
+  return (
+    <View style={styles.card}>
+      {/* 헤더 */}
+      <View style={styles.cardHeader}>
+        <View style={{ flex: 1 }}>
+          <View style={styles.cardTitleRow}>
+            <View style={[styles.recordTypeBadge, styles.recordTypeBadgeAcq]}>
+              <Text style={styles.recordTypeBadgeTxt}>취득세</Text>
+            </View>
+            <Text style={styles.cardAmount}>{formatManWon(item.price)}</Text>
+          </View>
+          <Text style={styles.cardDate}>{date}</Text>
+        </View>
+        <TouchableOpacity style={styles.deleteBtn} onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Text style={styles.deleteBtnText}>삭제</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 칩 */}
+      <View style={styles.chipRow}>
+        <View style={[styles.typeChip, { backgroundColor: '#F3EEFF', borderColor: '#D1B8FF' }]}>
+          <Text style={[styles.typeChipText, { color: '#8B5CF6' }]}>{acqLabel}</Text>
+        </View>
+        <Chip icon="🏠" label={propLabel} />
+        {item.area && <Chip icon="📐" label={areaLabel} />}
+        {item.houseCount && item.acqType === 'sale' && item.propType === 'house' && (
+          <Chip icon="🔢" label={`${item.houseCount === 4 ? '4+' : item.houseCount}주택`} />
+        )}
+        {item.isAdjusted && <Chip icon="📍" label="조정지역" />}
+        {item.isCorporation && <Chip icon="🏢" label="법인" />}
+      </View>
+
+      {/* 결과 요약 */}
+      <View style={styles.statRow}>
+        <StatCell label="취득세"       value={`${formatNumber(item.acqTax)}원`} />
+        <View style={styles.statDivider} />
+        <StatCell label="농특+지교"    value={`${formatNumber((item.ruralTax || 0) + (item.eduTax || 0))}원`} />
+        <View style={styles.statDivider} />
+        <StatCell label="합계"         value={`${formatNumber(item.total)}원`} />
+      </View>
+    </View>
+  );
+}
+
 function Chip({ icon, label }) {
   return (
     <View style={styles.chip}>
@@ -215,6 +394,25 @@ const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: '#F4FAF8' },
   list:   { padding: 16, paddingBottom: 40 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+
+  filterRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  filterTab: {
+    flex: 1, paddingVertical: 10, borderRadius: 20,
+    backgroundColor: '#FFF', alignItems: 'center',
+    borderWidth: 1.5, borderColor: '#C5E8E2',
+  },
+  filterTabActive:   { backgroundColor: '#1B998B', borderColor: '#1B998B' },
+  filterTabTxt:      { fontSize: 13, fontWeight: '600', color: '#557668' },
+  filterTabTxtActive:{ fontSize: 13, fontWeight: '700', color: '#FFF' },
+
+  cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
+  recordTypeBadge: {
+    backgroundColor: '#1B998B', borderRadius: 6,
+    paddingHorizontal: 7, paddingVertical: 3,
+  },
+  recordTypeBadgeBrokerage: { backgroundColor: '#FF6B35' },
+  recordTypeBadgeAcq:       { backgroundColor: '#8B5CF6' },
+  recordTypeBadgeTxt: { fontSize: 11, fontWeight: '700', color: '#FFF' },
 
   loadingText: { fontSize: 17, color: '#557668', marginTop: 12 },
 

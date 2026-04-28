@@ -36,6 +36,7 @@ function calcAnnuity(p, r, n, g) {
 /** 원금 균등 분할 상환 (거치기간 포함) */
 function calcEqualPrincipal(p, r, n, g) {
   const m = n - g;
+  if (m <= 0) return calcAnnuity(p, r, n, 0);
   const gracePayment = g > 0 && r > 0 ? Math.round(p * r) : 0;
   const monthlyPrincipal = Math.round(p / m);
 
@@ -182,6 +183,7 @@ function scheduleAnnuity(p, r, n, g) {
 
 function scheduleEqualPrincipal(p, r, n, g) {
   const m = n - g;
+  if (m <= 0) return scheduleAnnuity(p, r, n, 0);
   const gracePayment    = g > 0 && r > 0 ? Math.round(p * r) : 0;
   const monthlyPrincipal = Math.round(p / m);
 
@@ -317,8 +319,12 @@ export function calculateLoanByType(
 ) {
   const p = Number(principal);
   const r = Number(annualRate) / 100 / 12;
-  const n = Number(years) * 12;
-  const g = Number(gracePeriod) * 12;
+  const n = Math.round(Number(years) * 12);
+  const g = Math.round(Number(gracePeriod) * 12);
+
+  if (isNaN(p) || isNaN(r) || isNaN(n) || isNaN(g) || p <= 0 || n <= 0) {
+    return { loanType, monthlyPayment: 0, totalAmount: 0, totalInterest: 0 };
+  }
 
   switch (loanType) {
     case 'equalPrincipal': return calcEqualPrincipal(p, r, n, g);
@@ -340,8 +346,12 @@ export function generateScheduleByType(
 ) {
   const p = Number(principal);
   const r = Number(annualRate) / 100 / 12;
-  const n = Number(years) * 12;
-  const g = Number(gracePeriod) * 12;
+  const n = Math.round(Number(years) * 12);
+  const g = Math.round(Number(gracePeriod) * 12);
+
+  if (isNaN(p) || isNaN(r) || isNaN(n) || isNaN(g) || p <= 0 || n <= 0) {
+    return [];
+  }
 
   switch (loanType) {
     case 'equalPrincipal': return scheduleEqualPrincipal(p, r, n, g);
@@ -396,200 +406,86 @@ export function convertCurrency(krwAmount, rate) {
 }
 
 /* ══════════════════════════════════════
- *  조기(중도) 상환 시뮬레이션
+ *  중개보수(중개수수료) 계산 — 서울 기준 2021년 개정
  * ══════════════════════════════════════ */
 
 /**
- * @param {number} principal     - 원래 대출 원금
- * @param {number} annualRate    - 연 이자율 (%)
- * @param {number} years         - 대출 기간 (년)
- * @param {string} loanType      - 상환 방식
- * @param {number} gracePeriod   - 거치기간 (년)
- * @param {number} paidMonths    - 지금까지 납부한 개월 수
- * @param {number} repayAmount   - 중도상환 금액 (원)
+ * @param {string} transactionType  - 'sale'(매매) | 'jeonse'(전세) | 'monthly'(월세)
+ * @param {string} propertyType     - 'house'(주택) | 'officetel' | 'presale'(분양권) | 'other'(그 외)
+ * @param {number} price            - 매매가/전세가 (원)
+ * @param {number} deposit          - 보증금 (원, 월세 전용)
+ * @param {number} monthlyRent      - 월세 (원)
+ * @param {number} prepaid          - 분양권 불입금액 (원, 융자포함)
+ * @param {number} premium          - 분양권 프리미엄 (원)
+ * @param {number|null} customRate  - 직접 입력 요율 (%, null이면 자동)
  */
-export function calculateEarlyRepayment({
-  principal, annualRate, years,
-  loanType = 'annuity', gracePeriod = 0,
-  paidMonths, repayAmount,
+export function calculateBrokerage({
+  transactionType,
+  propertyType,
+  price       = 0,
+  deposit     = 0,
+  monthlyRent = 0,
+  prepaid     = 0,
+  premium     = 0,
+  customRate  = null,
 }) {
-  const n    = Number(years) * 12;
-  const paid = Number(paidMonths);
-  const repay = Number(repayAmount);
-
-  if (paid < 1 || paid >= n) {
-    return { error: `경과 개월은 1 ~ ${n - 1}개월 사이여야 합니다.` };
-  }
-
-  const schedule = generateScheduleByType(principal, annualRate, years, loanType, gracePeriod);
-  const monthItems = schedule.filter(s => s.type === 'month');
-
-  const currentBalance = monthItems[paid - 1]?.balance ?? Number(principal);
-
-  if (repay <= 0) return { error: '중도상환 금액을 입력해주세요.' };
-  if (repay > currentBalance) {
-    return { error: `중도상환 금액이 잔여 원금(${formatNumber(currentBalance)}원)보다 큽니다.` };
-  }
-
-  const originalRemainingInterest = Math.round(
-    monthItems.slice(paid).reduce((sum, m) => sum + m.interest, 0)
-  );
-
-  const newBalance      = currentBalance - repay;
-  const remainingMonths = n - paid;
-  const r               = Number(annualRate) / 100 / 12;
-  const currentMonthlyPayment = monthItems[paid]?.payment ?? 0;
-
-  if (newBalance === 0) {
-    return {
-      currentBalance, newBalance: 0, repayAmount: repay,
-      originalRemainingInterest, originalRemainingMonths: remainingMonths,
-      fullyRepaid: true,
-      reduceTerm: {
-        newRemainingMonths: 0, monthsReduced: remainingMonths,
-        newMonthlyPayment: 0, newRemainingInterest: 0,
-        interestSaved: originalRemainingInterest,
-      },
-      reducePayment: {
-        newRemainingMonths: 0, newMonthlyPayment: 0,
-        monthlyReduced: currentMonthlyPayment, newRemainingInterest: 0,
-        interestSaved: originalRemainingInterest,
-      },
-    };
-  }
-
-  // 옵션 A: 기간 단축 (납입금 유지)
-  let newTermMonths = remainingMonths;
-  if (r > 0 && currentMonthlyPayment > newBalance * r) {
-    const ratio = currentMonthlyPayment / (currentMonthlyPayment - newBalance * r);
-    newTermMonths = Math.max(1, Math.ceil(Math.log(ratio) / Math.log(1 + r)));
-  } else if (r === 0 && currentMonthlyPayment > 0) {
-    newTermMonths = Math.max(1, Math.ceil(newBalance / currentMonthlyPayment));
-  }
-  newTermMonths = Math.min(newTermMonths, remainingMonths);
-
-  let termInterest = 0, balA = newBalance;
-  for (let i = 0; i < newTermMonths; i++) {
-    const interest    = Math.round(balA * r);
-    const principalPmt = Math.max(0, currentMonthlyPayment - interest);
-    termInterest += interest;
-    balA = Math.max(0, balA - principalPmt);
-  }
-
-  // 옵션 B: 납입금 감소 (기간 유지)
-  let newMonthlyPayment;
-  if (r === 0) {
-    newMonthlyPayment = Math.round(newBalance / remainingMonths);
+  // ── 거래금액 산출
+  let tradeAmount;
+  if (propertyType === 'presale') {
+    tradeAmount = Number(prepaid) + Number(premium);
+  } else if (transactionType === 'monthly') {
+    const d = Number(deposit);
+    const m = Number(monthlyRent);
+    const c100 = d + m * 100;
+    tradeAmount = c100 < 50_000_000 ? d + m * 70 : c100;
   } else {
-    newMonthlyPayment = Math.round(
-      (newBalance * r * Math.pow(1 + r, remainingMonths)) /
-      (Math.pow(1 + r, remainingMonths) - 1)
-    );
+    tradeAmount = Number(price);
   }
 
-  let paymentInterest = 0, balB = newBalance;
-  for (let i = 0; i < remainingMonths; i++) {
-    const interest    = Math.round(balB * r);
-    const principalPmt = Math.max(0, newMonthlyPayment - interest);
-    paymentInterest += interest;
-    balB = Math.max(0, balB - principalPmt);
+  if (!tradeAmount || tradeAmount <= 0) return { error: '금액을 입력해주세요.' };
+
+  // ── 요율·한도 결정
+  let rate;
+  let limit = null;
+  const isSale = transactionType === 'sale' || propertyType === 'presale';
+
+  if (customRate !== null && customRate !== '' && !isNaN(Number(customRate))) {
+    rate = Number(customRate) / 100;
+  } else if (propertyType === 'officetel') {
+    rate = isSale ? 0.005 : 0.004;
+  } else if (propertyType === 'other') {
+    rate = 0.009;
+  } else {
+    // house / presale — 주택 요율 적용
+    if (isSale) {
+      if      (tradeAmount < 50_000_000)      { rate = 0.006; limit = 250_000; }
+      else if (tradeAmount < 200_000_000)     { rate = 0.005; limit = 800_000; }
+      else if (tradeAmount < 900_000_000)     { rate = 0.004; }
+      else if (tradeAmount < 1_200_000_000)   { rate = 0.005; }
+      else if (tradeAmount < 1_500_000_000)   { rate = 0.006; }
+      else                                    { rate = 0.007; }
+    } else {
+      if      (tradeAmount < 50_000_000)      { rate = 0.005; limit = 200_000; }
+      else if (tradeAmount < 100_000_000)     { rate = 0.004; limit = 300_000; }
+      else if (tradeAmount < 600_000_000)     { rate = 0.003; }
+      else if (tradeAmount < 1_200_000_000)   { rate = 0.004; }
+      else if (tradeAmount < 1_500_000_000)   { rate = 0.005; }
+      else                                    { rate = 0.006; }
+    }
   }
+
+  const calculated = Math.floor(tradeAmount * rate);
+  const commission = limit !== null ? Math.min(calculated, limit) : calculated;
+  const vat        = Math.round(commission * 0.1);
 
   return {
-    currentBalance, newBalance, repayAmount: repay,
-    originalRemainingInterest, originalRemainingMonths: remainingMonths,
-    fullyRepaid: false,
-    reduceTerm: {
-      newRemainingMonths: newTermMonths,
-      monthsReduced: remainingMonths - newTermMonths,
-      newMonthlyPayment: currentMonthlyPayment,
-      newRemainingInterest: Math.round(termInterest),
-      interestSaved: Math.round(originalRemainingInterest - termInterest),
-    },
-    reducePayment: {
-      newRemainingMonths: remainingMonths,
-      newMonthlyPayment,
-      monthlyReduced: currentMonthlyPayment - newMonthlyPayment,
-      newRemainingInterest: Math.round(paymentInterest),
-      interestSaved: Math.round(originalRemainingInterest - paymentInterest),
-    },
+    tradeAmount,
+    rate,
+    commission,
+    vat,
+    total: commission + vat,
+    limit,
+    isLimited: limit !== null && calculated > limit,
   };
 }
 
-/* ══════════════════════════════════════
- *  부동산 담보대출 한도 계산 (LTV + DSR)
- *  2024년 기준 간소화 적용
- * ══════════════════════════════════════ */
-
-/**
- * @param {number} propertyPrice       - 부동산 가격 (원)
- * @param {string} zone                - 'restricted'(투기과열) | 'adjusted'(조정) | 'normal'(기타)
- * @param {string} ownership           - 'none'(무주택) | 'one'(1주택) | 'multi'(다주택)
- * @param {number} annualIncome        - 연 소득 (원)
- * @param {number} existingMonthlyDebt - 기존 월 부채 상환액 (원)
- * @param {number} loanRate            - 희망 금리 (%)
- * @param {number} loanYears           - 대출 기간 (년)
- */
-export function calculateRealEstateLoan({
-  propertyPrice, zone, ownership,
-  annualIncome, existingMonthlyDebt,
-  loanRate, loanYears,
-}) {
-  const price    = Number(propertyPrice);
-  const income   = Number(annualIncome);
-  const existing = Number(existingMonthlyDebt);
-  const rate     = Number(loanRate);
-  const years    = Number(loanYears);
-  const r = rate / 100 / 12;
-  const n = years * 12;
-
-  // LTV 비율 결정
-  let ltvRate;
-  if (zone === 'restricted') {
-    if (price > 1_500_000_000)      ltvRate = 0;
-    else if (price > 900_000_000)   ltvRate = 0.20;
-    else                            ltvRate = ownership === 'none' ? 0.40 : 0.30;
-  } else if (zone === 'adjusted') {
-    if (price > 900_000_000)        ltvRate = 0.30;
-    else                            ltvRate = ownership === 'none' ? 0.50 : 0.40;
-  } else {
-    ltvRate = ownership === 'multi' ? 0.60 : 0.70;
-  }
-
-  const ltvMaxLoan = Math.round(price * ltvRate);
-
-  // DSR 기준 (은행권 40%)
-  const maxMonthlyNew = Math.max(0, Math.round(income / 12 * 0.40) - existing);
-  let dsrMaxLoan;
-  if (r === 0 || maxMonthlyNew === 0) {
-    dsrMaxLoan = maxMonthlyNew * n;
-  } else {
-    dsrMaxLoan = Math.round(
-      maxMonthlyNew * (Math.pow(1 + r, n) - 1) / (r * Math.pow(1 + r, n))
-    );
-  }
-  dsrMaxLoan = Math.max(0, dsrMaxLoan);
-
-  const maxLoan = Math.min(ltvMaxLoan, dsrMaxLoan);
-
-  let monthlyPayment = 0;
-  if (maxLoan > 0) {
-    monthlyPayment = r > 0
-      ? Math.round((maxLoan * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1))
-      : Math.round(maxLoan / n);
-  }
-
-  return {
-    propertyPrice: price,
-    ltvRate, ltvMaxLoan,
-    dsrMaxLoan,
-    maxMonthlyNew,
-    maxLoan,
-    monthlyPayment,
-    totalInterest: Math.max(0, monthlyPayment * n - maxLoan),
-    isLtvZero: ltvRate === 0,
-    limitedBy: ltvMaxLoan <= dsrMaxLoan ? 'ltv' : 'dsr',
-    loanRate: rate,
-    loanYears: years,
-  };
-}

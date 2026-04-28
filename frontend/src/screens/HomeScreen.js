@@ -33,17 +33,17 @@ const C = {
 };
 
 const MENU_ITEMS = [
-  { icon: '📊', label: '대출 계산기',       sub: '4가지 상환방식 계산',      screen: 'LoanCalculator', color: '#1B998B', bg: '#E3F7F4' },
-  { icon: '⏩', label: '조기상환 시뮬레이터', sub: '중도상환 이자 절감 계산',   screen: 'EarlyRepayment', color: '#E07A5F', bg: '#FDEEE9' },
-  { icon: '🏠', label: '부동산 대출 계산',   sub: 'LTV·DSR 최대 대출 산출',  screen: 'RealEstate',     color: '#3D6B4F', bg: '#E6F2EB' },
-  { icon: '📖', label: '상환방식 안내',       sub: '4가지 방식 상세 비교',     screen: 'RepaymentGuide', color: '#8B5CF6', bg: '#F3EEFF' },
+  { icon: '📊', label: '대출 계산기',    sub: '4가지 상환방식 계산',     screen: 'LoanCalculator', color: '#1B998B', bg: '#E3F7F4' },
+  { icon: '🏢', label: '중개보수 계산기', sub: '매매·전세·월세 수수료',   screen: 'Brokerage',      color: '#E07A5F', bg: '#FDEEE9' },
+  { icon: '🏠', label: '취득세 계산기',  sub: '매매·증여·상속·원시 취득세', screen: 'AcquisitionTax', color: '#8B5CF6', bg: '#F3EEFF' },
+  { icon: '📖', label: '상환방식 안내',  sub: '4가지 방식 상세 비교',    screen: 'RepaymentGuide', color: '#3B82F6', bg: '#EFF6FF' },
 ];
 
 const QUICK_ITEMS = [
-  { icon: '📊', label: '대출\n계산기',     screen: 'LoanCalculator', color: '#1B998B', bg: '#E3F7F4', border: '#A8DED8' },
-  { icon: '⏩', label: '조기상환\n시뮬레이터', screen: 'EarlyRepayment', color: '#E07A5F', bg: '#FDEEE9', border: '#F5C4B5' },
-  { icon: '🏠', label: '부동산\n대출계산',  screen: 'RealEstate',     color: '#3D6B4F', bg: '#E6F2EB', border: '#AACFB9' },
-  { icon: '📖', label: '상환방식\n안내',    screen: 'RepaymentGuide', color: '#8B5CF6', bg: '#F3EEFF', border: '#D1B8FF' },
+  { icon: '📊', label: '대출\n계산기',    screen: 'LoanCalculator', color: '#1B998B', bg: '#E3F7F4', border: '#A8DED8' },
+  { icon: '🏢', label: '중개보수\n계산기', screen: 'Brokerage',      color: '#E07A5F', bg: '#FDEEE9', border: '#F5C4B5' },
+  { icon: '🏠', label: '취득세\n계산기',  screen: 'AcquisitionTax', color: '#8B5CF6', bg: '#F3EEFF', border: '#D1B8FF' },
+  { icon: '📖', label: '상환방식\n안내',  screen: 'RepaymentGuide', color: '#3B82F6', bg: '#EFF6FF', border: '#BFDBFE' },
 ];
 
 export default function HomeScreen({ navigation }) {
@@ -248,7 +248,6 @@ export default function HomeScreen({ navigation }) {
               <View style={s.drawerDivider} />
 
               <View style={s.drawerMenuWrap}>
-                <Text style={s.drawerMenuLabel}>메 뉴</Text>
                 {MENU_ITEMS.map((item, idx) => (
                   <TouchableOpacity
                     key={idx}
@@ -464,7 +463,7 @@ const s = StyleSheet.create({
   quickCard: {
     width: (SCREEN_WIDTH - 32 - 32 - 10) / 2,
     borderRadius: 16, borderWidth: 1.5,
-    padding: 16, alignItems: 'center',
+    padding: 14, alignItems: 'center',
   },
   quickCardIcon:  { fontSize: 30, marginBottom: 8 },
   quickCardLabel: { fontSize: 13, fontWeight: '700', textAlign: 'center', lineHeight: 19 },
@@ -527,10 +526,6 @@ const s = StyleSheet.create({
   drawerCloseTxt: { fontSize: 15, color: '#FFF', fontWeight: '700' },
   drawerDivider:  { height: 1, backgroundColor: '#F0F0F0' },
   drawerMenuWrap: { paddingHorizontal: 14, paddingTop: 18 },
-  drawerMenuLabel: {
-    fontSize: 11, fontWeight: '700', color: '#ADADAD',
-    letterSpacing: 1.8, marginBottom: 10, paddingLeft: 6,
-  },
   drawerItem: {
     flexDirection: 'row', alignItems: 'center',
     paddingVertical: 13, paddingHorizontal: 6,
